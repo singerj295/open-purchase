@@ -20,7 +20,14 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/lib/i18n/ThemeContext";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
-import { useAuth } from "@/lib/auth/AuthContext";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  restaurantName: string;
+  restaurantAddress: string;
+}
 
 export default function DashboardLayout({
   children,
@@ -35,7 +42,6 @@ function DashboardLayoutInner({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
   const theme = useTheme();
   const { lang } = theme as { lang: "en" | "zh" };
@@ -43,17 +49,37 @@ function DashboardLayoutInner({
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    // Read user from localStorage synchronously on mount
+    const savedUser = localStorage.getItem('open-purchase-user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem('open-purchase-user');
+      }
+    }
   }, []);
 
-  // Auth check - redirect to login if not authenticated (only on client)
+  // Auth check - redirect to login if not authenticated (only on client, after mount)
   useEffect(() => {
-    if (mounted && !isLoading && !user) {
-      router.push("/login");
+    if (mounted && !user) {
+      // Check one more time
+      const savedUser = localStorage.getItem('open-purchase-user');
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch (e) {
+          router.push("/login");
+        }
+      } else {
+        router.push("/login");
+      }
     }
-  }, [mounted, user, isLoading, router]);
+  }, [mounted, user, router]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -67,7 +93,7 @@ function DashboardLayoutInner({
   }, []);
 
   // Show loading state
-  if (!mounted || isLoading) {
+  if (!mounted) {
     return (
       <div style={{ 
         minHeight: '100vh', 

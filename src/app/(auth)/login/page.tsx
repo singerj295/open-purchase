@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 function LoginForm() {
-  const router = useRouter();
   const [email, setEmail] = useState("demo@restaurant.com");
   const [password, setPassword] = useState("demo");
   const [loading, setLoading] = useState(false);
@@ -26,10 +23,9 @@ function LoginForm() {
         restaurantName: "My Restaurant",
         restaurantAddress: "123 Food Street, Hong Kong",
       };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('open-purchase-user', JSON.stringify(user));
-      }
-      router.push("/");
+      localStorage.setItem('open-purchase-user', JSON.stringify(user));
+      // Use window.location for full page reload to ensure auth state is fresh
+      window.location.href = "/";
       return;
     }
 
@@ -42,7 +38,6 @@ function LoginForm() {
       });
 
       const data = await response.json();
-      console.log("Auth response:", data);
 
       if (!data.success) {
         throw new Error(data.error || "登入失敗");
@@ -56,15 +51,12 @@ function LoginForm() {
         restaurantName: "My Restaurant",
         restaurantAddress: "123 Food Street, Hong Kong",
       };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('open-purchase-user', JSON.stringify(user));
-      }
+      localStorage.setItem('open-purchase-user', JSON.stringify(user));
 
-      router.push("/");
+      // Use window.location for full page reload
+      window.location.href = "/";
     } catch (err: any) {
-      console.error("Login error:", err);
       setError(err.message || "登入失敗");
-    } finally {
       setLoading(false);
     }
   };
@@ -182,9 +174,9 @@ function LoginForm() {
 
           <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--muted)', fontSize: '14px' }}>
             還沒有帳戶？{" "}
-            <Link href="/signup" style={{ color: 'var(--primary)', fontWeight: '500' }}>
+            <span style={{ color: 'var(--primary)', fontWeight: '500', cursor: 'pointer' }}>
               註冊
-            </Link>
+            </span>
           </p>
         </div>
       </div>
