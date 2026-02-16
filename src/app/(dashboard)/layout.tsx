@@ -9,6 +9,7 @@ import {
   Users,
   Settings,
   Calculator,
+  FileText,
   ChevronLeft,
   Menu,
   Bell,
@@ -31,6 +32,7 @@ function DashboardLayoutInner({
     { icon: Users, label: "Suppliers", labelZh: "供應商", href: "/suppliers" },
     { icon: Calculator, label: "Recipes", labelZh: "食譜", href: "/recipes" },
     { icon: Package, label: "Inventory", labelZh: "庫存", href: "/inventory" },
+    { icon: FileText, label: "Reports", labelZh: "報告", href: "/reports" },
     { icon: BarChart3, label: "Analytics", labelZh: "分析", href: "/analytics" },
     { icon: Settings, label: "Settings", labelZh: "設定", href: "/settings" },
   ];
