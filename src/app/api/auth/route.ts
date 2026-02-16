@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 
 // Mock user for demo mode when Supabase is not configured
 const mockUsers: Record<string, { id: string; email: string; name: string; password: string }> = {
-  'demo@example.com': {
+  'demo@restaurant.com': {
     id: 'demo-user-001',
-    email: 'demo@example.com',
-    name: 'Demo User',
-    password: 'demo123456',
+    email: 'demo@restaurant.com',
+    name: 'Restaurant Owner',
+    password: 'demo',
   },
 };
 
