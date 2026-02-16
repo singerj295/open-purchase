@@ -105,15 +105,13 @@ export default function LoginPage() {
         </div>
 
         {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-700 font-medium mb-2">Demo Mode</p>
-          <p className="text-xs text-yellow-600">
-            Connect Supabase to enable authentication. Until then, the app uses mock data.
+        <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <p className="text-sm text-emerald-700 font-medium mb-2">🎉 Demo Mode Available!</p>
+          <p className="text-xs text-emerald-600">
+            Email: <code className="bg-emerald-100 px-1 rounded">demo@example.com</code>
           </p>
-          <p className="text-xs text-yellow-600 mt-2">
-            <a href="https://github.com/singerj295/open-purchase/blob/main/DATABASE.md" target="_blank" className="underline">
-              View Database Setup Guide
-            </a>
+          <p className="text-xs text-emerald-600 mt-1">
+            Password: <code className="bg-emerald-100 px-1 rounded">demo123456</code>
           </p>
         </div>
       </div>
