@@ -266,8 +266,7 @@ export default function OrdersPage() {
                           <Eye size={16} />
                         </button>
                         <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
-                          <Edit size                        </button>
-={16} />
+                          <Edit size={16} />
                         <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444' }}>
                           <Trash2 size={16} />
                         </button>

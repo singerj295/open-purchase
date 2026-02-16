@@ -260,7 +260,7 @@ export default function SuppliersPage() {
           </div>
         ))}
       </div>
-      </>
+      )}
 
       {/* Modal */}
       {showModal && (
