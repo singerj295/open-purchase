@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Search, Filter, Eye, Edit, Trash2 } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface Order {
   id: string;
@@ -31,7 +32,16 @@ const statusColors: Record<string, string> = {
   cancelled: "bg-gray-100 text-gray-600",
 };
 
+const statusLabels: Record<string, { en: string; zh: string }> = {
+  pending: { en: "Pending", zh: "待處理" },
+  confirmed: { en: "Confirmed", zh: "已確認" },
+  shipped: { en: "Shipped", zh: "已發貨" },
+  delivered: { en: "Delivered", zh: "已送達" },
+  cancelled: { en: "Cancelled", zh: "已取消" },
+};
+
 export default function OrdersPage() {
+  const { lang, t } = useLanguage();
   const [orders] = useState<Order[]>(mockOrders);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -45,10 +55,10 @@ export default function OrdersPage() {
   });
 
   const stats = [
-    { label: "Total Orders", value: orders.length },
-    { label: "Pending", value: orders.filter((o) => o.status === "pending").length },
-    { label: "Delivered", value: orders.filter((o) => o.status === "delivered").length },
-    { label: "Total Value", value: `$${orders.reduce((sum, o) => sum + o.total, 0)}` },
+    { label: "Total Orders", labelZh: "總訂單", value: orders.length },
+    { label: "Pending", labelZh: "待處理", value: orders.filter((o) => o.status === "pending").length },
+    { label: "Delivered", labelZh: "已送達", value: orders.filter((o) => o.status === "delivered").length },
+    { label: "Total Value", labelZh: "總額", value: `$${orders.reduce((sum, o) => sum + o.total, 0)}` },
   ];
 
   return (
@@ -56,12 +66,12 @@ export default function OrdersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-          <p className="text-gray-500">Manage your purchase orders</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.orders.title}</h1>
+          <p className="text-gray-500">{t.orders.subtitle}</p>
         </div>
         <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2">
           <Plus size={20} />
-          New Order
+          {t.orders.newOrder}
         </button>
       </div>
 
@@ -70,7 +80,7 @@ export default function OrdersPage() {
         {stats.map((stat) => (
           <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm border">
             <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-            <p className="text-gray-500 text-sm">{stat.label}</p>
+            <p className="text-gray-500 text-sm">{lang === 'zh' ? stat.labelZh : stat.label}</p>
           </div>
         ))}
       </div>
@@ -81,10 +91,10 @@ export default function OrdersPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search orders..."
+            placeholder={t.common.search + "..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
           />
         </div>
         <select
@@ -92,12 +102,12 @@ export default function OrdersPage() {
           onChange={(e) => setStatusFilter(e.target.value)}
           className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
-          <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="shipped">Shipped</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="all">{t.common.filter}</option>
+          <option value="pending">{t.orders.pending}</option>
+          <option value="confirmed">{t.orders.confirmed}</option>
+          <option value="shipped">{t.orders.shipped}</option>
+          <option value="delivered">{t.orders.delivered}</option>
+          <option value="cancelled">{t.orders.cancelled}</option>
         </select>
       </div>
 
@@ -106,38 +116,62 @@ export default function OrdersPage() {
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {t.orders.orderNumber}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {t.orders.supplier}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {t.orders.items}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {t.orders.total}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {t.orders.status}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {t.orders.date}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {t.orders.actions}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {filteredOrders.map((order) => (
               <tr key={order.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap font-medium text-emerald-600">{order.orderNumber}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-900">{order.supplier}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">{order.items} items</td>
-                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${order.total}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-emerald-600">
+                  {order.orderNumber}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {order.supplier}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {order.items}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  ${order.total}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
-                    {order.status}
+                    {statusLabels[order.status]?.[lang] || order.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">{order.date}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {order.date}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600">
-                      <Eye size={18} />
+                    <button className="p-1 hover:bg-gray-100 rounded">
+                      <Eye size={16} />
                     </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600">
-                      <Edit size={18} />
+                    <button className="p-1 hover:bg-gray-100 rounded">
+                      <Edit size={16} />
                     </button>
-                    <button className="p-2 hover:bg-red-50 rounded-lg text-red-600">
-                      <Trash2 size={18} />
+                    <button className="p-1 hover:bg-gray-100 rounded text-red-500">
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </td>

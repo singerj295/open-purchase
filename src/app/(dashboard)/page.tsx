@@ -2,10 +2,12 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { ArrowUpRight, ArrowDownRight, Package, ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const stats = [
   {
     label: "Total Orders",
+    labelZh: "總訂單數",
     value: "156",
     change: "+12%",
     trend: "up",
@@ -15,6 +17,7 @@ const stats = [
   },
   {
     label: "Active Suppliers",
+    labelZh: "供應商數量",
     value: "24",
     change: "+2",
     trend: "up",
@@ -24,6 +27,7 @@ const stats = [
   },
   {
     label: "Monthly Spend",
+    labelZh: "月度支出",
     value: "$12,450",
     change: "-5%",
     trend: "down",
@@ -33,6 +37,7 @@ const stats = [
   },
   {
     label: "Cost Savings",
+    labelZh: "成本節省",
     value: "$892",
     change: "+18%",
     trend: "up",
@@ -67,17 +72,26 @@ const recentOrders = [
   { id: "ORD-005", supplier: "Spice World", items: 6, total: "$180", status: "delivered" },
 ];
 
+const statusLabels: Record<string, { en: string; zh: string }> = {
+  delivered: { en: "Delivered", zh: "已送達" },
+  shipping: { en: "Shipped", zh: "已發貨" },
+  pending: { en: "Pending", zh: "待處理" },
+  confirmed: { en: "Confirmed", zh: "已確認" },
+};
+
 export default function DashboardPage() {
+  const { lang, t } = useLanguage();
+
   return (
     <div className="space-y-6">
       {/* Welcome */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500">Welcome back! Here's your procurement overview.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.dashboard.title}</h1>
+          <p className="text-gray-500">{t.dashboard.subtitle}</p>
         </div>
         <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
-          + New Order
+          + {t.dashboard.newOrder}
         </button>
       </div>
 
@@ -107,7 +121,7 @@ export default function DashboardPage() {
             </div>
             <div className="mt-4">
               <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-              <p className="text-gray-500 text-sm">{stat.label}</p>
+              <p className="text-gray-500 text-sm">{lang === 'zh' ? stat.labelZh : stat.label}</p>
             </div>
           </div>
         ))}
@@ -117,7 +131,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Orders Chart */}
         <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Orders This Week</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            {lang === 'zh' ? '本週訂單' : 'Orders This Week'}
+          </h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={orderData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -138,7 +154,9 @@ export default function DashboardPage() {
 
         {/* Spend Chart */}
         <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Spend</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            {lang === 'zh' ? '月度支出' : 'Monthly Spend'}
+          </h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={spendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -168,9 +186,9 @@ export default function DashboardPage() {
       <div className="bg-white rounded-xl shadow-sm border">
         <div className="p-6 border-b">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t.dashboard.recentOrders}</h3>
             <a href="/orders" className="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
-              View All →
+              {lang === 'zh' ? '查看全部 →' : 'View All →'}
             </a>
           </div>
         </div>
@@ -179,19 +197,19 @@ export default function DashboardPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order ID
+                  {lang === 'zh' ? '訂單編號' : 'Order ID'}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Supplier
+                  {t.orders.supplier}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Items
+                  {t.orders.items}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total
+                  {t.orders.total}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t.orders.status}
                 </th>
               </tr>
             </thead>
@@ -205,7 +223,7 @@ export default function DashboardPage() {
                     {order.supplier}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.items} items
+                    {order.items} {lang === 'zh' ? '項' : 'items'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {order.total}
@@ -222,7 +240,7 @@ export default function DashboardPage() {
                           : "bg-yellow-100 text-yellow-700"
                       }`}
                     >
-                      {order.status}
+                      {statusLabels[order.status]?.[lang] || order.status}
                     </span>
                   </td>
                 </tr>
