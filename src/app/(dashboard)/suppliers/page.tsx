@@ -165,15 +165,28 @@ export default function SuppliersPage() {
         <SupplierModal
           supplier={editingSupplier}
           onClose={() => setShowModal(false)}
-          onSave={(supplier) => {
+          onSave={(newSupplier) => {
             if (editingSupplier) {
               setSuppliers(
                 suppliers.map((s) =>
-                  s.id === editingSupplier.id ? { ...s, ...supplier } : s
+                  s.id === editingSupplier.id
+                    ? { ...s, ...newSupplier }
+                    : s
                 )
               );
             } else {
-              setSuppliers([...suppliers, { ...supplier, id: String(Date.now()) }]);
+              setSuppliers([
+                ...suppliers,
+                {
+                  id: String(Date.now()),
+                  name: newSupplier.name || "Unknown",
+                  contact: newSupplier.contact || "Unknown",
+                  phone: newSupplier.phone || "",
+                  email: newSupplier.email || "",
+                  address: newSupplier.address || "",
+                  isActive: newSupplier.isActive ?? true,
+                },
+              ]);
             }
             setShowModal(false);
           }}
