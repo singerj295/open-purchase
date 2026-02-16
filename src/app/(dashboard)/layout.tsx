@@ -13,6 +13,7 @@ import {
   FileText,
   ChevronLeft,
   Menu,
+  Search,
   LogOut,
   User,
   Building,
