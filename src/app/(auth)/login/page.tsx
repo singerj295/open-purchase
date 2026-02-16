@@ -4,8 +4,8 @@ import { useState } from "react";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 function LoginForm() {
-  const [email, setEmail] = useState("demo@restaurant.com");
-  const [password, setPassword] = useState("demo");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -13,6 +13,20 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    // Eldon account - blank data
+    if (email === "eldon@chta.one" && password === "0000") {
+      const user = {
+        id: "2",
+        name: "",
+        email: email,
+        restaurantName: "",
+        restaurantAddress: "",
+      };
+      localStorage.setItem('open-purchase-user', JSON.stringify(user));
+      window.location.href = "/";
+      return;
+    }
 
     // Demo mode - direct login without API
     if (email === "demo@restaurant.com" && password === "demo") {
@@ -25,20 +39,6 @@ function LoginForm() {
       };
       localStorage.setItem('open-purchase-user', JSON.stringify(user));
       // Use window.location for full page reload to ensure auth state is fresh
-      window.location.href = "/";
-      return;
-    }
-
-    // Eldon account
-    if (email === "eldon@chta.one" && password === "0000") {
-      const user = {
-        id: "2",
-        name: "Eldon",
-        email: email,
-        restaurantName: "My Restaurant",
-        restaurantAddress: "123 Food Street, Hong Kong",
-      };
-      localStorage.setItem('open-purchase-user', JSON.stringify(user));
       window.location.href = "/";
       return;
     }
@@ -78,11 +78,6 @@ function LoginForm() {
   const handleDemoLogin = () => {
     setEmail("demo@restaurant.com");
     setPassword("demo");
-  };
-
-  const handleEldonLogin = () => {
-    setEmail("eldon@chta.one");
-    setPassword("0000");
   };
 
   return (
@@ -185,16 +180,9 @@ function LoginForm() {
             <button
               onClick={handleDemoLogin}
               className="btn-secondary"
-              style={{ width: '100%', marginBottom: '8px' }}
-            >
-              🔐 試用 Demo 帳戶
-            </button>
-            <button
-              onClick={handleEldonLogin}
-              className="btn-secondary"
               style={{ width: '100%' }}
             >
-              👤 Eldon 登入
+              🔐 試用 Demo 帳戶
             </button>
           </div>
 
