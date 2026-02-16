@@ -134,6 +134,22 @@ export const en = {
     allSuppliers: "All suppliers",
     dateRange: "Date Range",
   },
+
+  // API
+  api: {
+    title: "API Access",
+    subtitle: "OpenClaw AI API settings",
+    apiKey: "API Key",
+    generateKey: "Generate New Key",
+    permissions: "Permissions",
+    documentation: "Documentation",
+    status: "Status",
+    active: "Active",
+    inactive: "Inactive",
+    lastUsed: "Last Used",
+    copyKey: "Copy Key",
+    keyCopied: "Key copied!",
+  },
   
   // Inventory
   inventory: {
@@ -353,6 +369,22 @@ export const zh = {
     thisMonth: "本月",
     allSuppliers: "所有供應商",
     dateRange: "日期範圍",
+  },
+
+  // API
+  api: {
+    title: "API 訪問",
+    subtitle: "OpenClaw AI API 設置",
+    apiKey: "API 金鑰",
+    generateKey: "生成新金鑰",
+    permissions: "權限",
+    documentation: "文檔",
+    status: "狀態",
+    active: "啟用",
+    inactive: "停用",
+    lastUsed: "上次使用",
+    copyKey: "複製金鑰",
+    keyCopied: "金鑰已複製！",
   },
   
   // Inventory
