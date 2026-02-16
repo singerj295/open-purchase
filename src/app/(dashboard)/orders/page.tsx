@@ -49,7 +49,7 @@ interface User {
 }
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]); // Start empty for all users
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [lang, setLang] = useState<"en" | "zh">("zh");
@@ -83,10 +83,9 @@ export default function OrdersPage() {
   const isZh = lang === "zh";
   const isBlankUser = user?.email === "eldon@chta.one" || user?.name === "";
 
-  // Show empty state for blank users
-  const effectiveOrders = isBlankUser ? [] : orders;
-  const effectiveSuppliers = isBlankUser ? [] : ["Fresh Farm Co", "Ocean Seafood", "Kitchen Supplies Ltd", "Spice World"];
+  // Products and suppliers list for order form
   const products = ["Tomatoes", "Salmon", "Olive Oil", "Chicken Breast", "Pasta", "Fresh Basil", "Mixed Herbs", "Sea Bass"];
+  const supplierList = ["Fresh Farm Co", "Ocean Seafood", "Kitchen Supplies Ltd", "Spice World"];
 
   const handleAddOrder = () => {
     if (newOrder.supplier && newOrder.product && newOrder.items && newOrder.total) {
@@ -106,7 +105,7 @@ export default function OrdersPage() {
     }
   };
 
-  const filteredOrders = effectiveOrders.filter((order) => {
+  const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
       order.supplier.toLowerCase().includes(search.toLowerCase());
@@ -115,10 +114,10 @@ export default function OrdersPage() {
   });
 
   const stats = [
-    { label: "Total Orders", labelZh: "總訂單", value: effectiveOrders.length, color: "#3b82f6" },
-    { label: "Pending", labelZh: "待處理", value: effectiveOrders.filter((o) => o.status === "pending").length, color: "#f97316" },
-    { label: "Delivered", labelZh: "已送達", value: effectiveOrders.filter((o) => o.status === "delivered").length, color: "#10b981" },
-    { label: "Total Value", labelZh: "總額", value: `$${effectiveOrders.reduce((sum, o) => sum + o.total, 0)}`, color: "#8b5cf6" },
+    { label: "Total Orders", labelZh: "總訂單", value: orders.length, color: "#3b82f6" },
+    { label: "Pending", labelZh: "待處理", value: orders.filter((o) => o.status === "pending").length, color: "#f97316" },
+    { label: "Delivered", labelZh: "已送達", value: orders.filter((o) => o.status === "delivered").length, color: "#10b981" },
+    { label: "Total Value", labelZh: "總額", value: `$${orders.reduce((sum, o) => sum + o.total, 0)}`, color: "#8b5cf6" },
   ];
 
   if (!mounted) {
@@ -317,7 +316,7 @@ export default function OrdersPage() {
                   style={{ width: '100%' }}
                 >
                   <option value="">{isZh ? "選擇供應商" : "Select supplier"}</option>
-                  {effectiveSuppliers.map(s => <option key={s} value={s}>{s}</option>)}
+                  {supplierList.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               

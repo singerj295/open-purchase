@@ -35,7 +35,7 @@ interface User {
 }
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]); // Start empty for all users
   const [search, setSearch] = useState("");
   const [lang, setLang] = useState<"en" | "zh">("zh");
   const [showModal, setShowModal] = useState(false);
@@ -73,9 +73,6 @@ export default function SuppliersPage() {
   const isZh = lang === "zh";
   const isBlankUser = user?.email === "eldon@chta.one" || user?.name === "";
 
-  // Show empty state for blank users
-  const effectiveSuppliers = isBlankUser ? [] : suppliers;
-
   const handleAddSupplier = () => {
     if (newSupplier.name && newSupplier.contact && newSupplier.phone && newSupplier.email) {
       const supplier: Supplier = {
@@ -89,7 +86,7 @@ export default function SuppliersPage() {
     }
   };
 
-  const filteredSuppliers = effectiveSuppliers.filter(
+  const filteredSuppliers = suppliers.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.contact.toLowerCase().includes(search.toLowerCase()) ||
@@ -133,18 +130,18 @@ export default function SuppliersPage() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
         <div className="stat-card">
-          <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0 }}>{effectiveSuppliers.length}</h3>
+          <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0 }}>{suppliers.length}</h3>
           <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "供應商總數" : "Total Suppliers"}</p>
         </div>
         <div className="stat-card">
           <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0, color: 'var(--primary)' }}>
-            {effectiveSuppliers.filter((s) => s.isActive).length}
+            {suppliers.filter((s) => s.isActive).length}
           </h3>
           <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "活躍供應商" : "Active Suppliers"}</p>
         </div>
         <div className="stat-card">
           <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0, color: 'var(--muted)' }}>
-            {new Set(effectiveSuppliers.map(s => s.category)).size}
+            {new Set(suppliers.map(s => s.category)).size}
           </h3>
           <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "類別數量" : "Categories"}</p>
         </div>
