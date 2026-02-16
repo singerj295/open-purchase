@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin } from "lucide-react";
 
 interface Supplier {
@@ -21,10 +22,9 @@ const mockSuppliers: Supplier[] = [
 ];
 
 export default function SuppliersPage() {
+  const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
   const [search, setSearch] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [lang, setLang] = useState<"en" | "zh">("zh");
 
   const isZh = lang === "zh";
@@ -54,10 +54,7 @@ export default function SuppliersPage() {
           </p>
         </div>
         <button
-          onClick={() => {
-            setEditingSupplier(null);
-            setShowModal(true);
-          }}
+          onClick={() => alert(isZh ? "新增供應商功能即將推出" : "Add Supplier feature coming soon")}
           className="btn-primary"
           style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
         >
