@@ -15,8 +15,16 @@ import {
   Bell,
   Search,
 } from "lucide-react";
-import { LanguageProvider, useLanguage } from "@/lib/i18n/LanguageContext";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <DashboardLayoutInner>{children}</DashboardLayoutInner>;
+}
 
 function DashboardLayoutInner({
   children,
@@ -110,17 +118,5 @@ function DashboardLayoutInner({
         <div className="p-6">{children}</div>
       </main>
     </div>
-  );
-}
-
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <LanguageProvider>
-      <DashboardLayoutInner>{children}</DashboardLayoutInner>
-    </LanguageProvider>
   );
 }

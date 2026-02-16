@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LanguageProvider, useLanguage } from "@/lib/i18n/LanguageContext";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 function LoginForm() {
@@ -129,9 +129,5 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  return (
-    <LanguageProvider>
-      <LoginForm />
-    </LanguageProvider>
-  );
+  return <LoginForm />;
 }
