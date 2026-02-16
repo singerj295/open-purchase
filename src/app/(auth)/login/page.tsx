@@ -29,6 +29,20 @@ function LoginForm() {
       return;
     }
 
+    // Eldon account
+    if (email === "eldon@chta.one" && password === "0000") {
+      const user = {
+        id: "2",
+        name: "Eldon",
+        email: email,
+        restaurantName: "My Restaurant",
+        restaurantAddress: "123 Food Street, Hong Kong",
+      };
+      localStorage.setItem('open-purchase-user', JSON.stringify(user));
+      window.location.href = "/";
+      return;
+    }
+
     // Real API login
     try {
       const response = await fetch("/api/auth", {
@@ -64,6 +78,11 @@ function LoginForm() {
   const handleDemoLogin = () => {
     setEmail("demo@restaurant.com");
     setPassword("demo");
+  };
+
+  const handleEldonLogin = () => {
+    setEmail("eldon@chta.one");
+    setPassword("0000");
   };
 
   return (
@@ -166,9 +185,16 @@ function LoginForm() {
             <button
               onClick={handleDemoLogin}
               className="btn-secondary"
-              style={{ width: '100%' }}
+              style={{ width: '100%', marginBottom: '8px' }}
             >
               🔐 試用 Demo 帳戶
+            </button>
+            <button
+              onClick={handleEldonLogin}
+              className="btn-secondary"
+              style={{ width: '100%' }}
+            >
+              👤 Eldon 登入
             </button>
           </div>
 
