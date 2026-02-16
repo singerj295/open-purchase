@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { Settings, Bell, Bot, Database, Globe, Save } from "lucide-react";
-import { useTheme } from "@/lib/i18n/ThemeContext";
 
 export default function SettingsPage() {
-  const { lang, t } = useTheme();
   const [settings, setSettings] = useState({
     companyName: "My Restaurant",
     currency: "HKD",
@@ -15,46 +13,73 @@ export default function SettingsPage() {
     aiEnabled: true,
     minimaxApiKey: "",
   });
+  const [lang, setLang] = useState<"en" | "zh">("zh");
+
+  const isZh = lang === "zh";
 
   const handleSave = () => {
-    alert(lang === 'zh' ? "設定已儲存！" : "Settings saved successfully!");
+    alert(isZh ? "設定已儲存！" : "Settings saved successfully!");
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '900px' }}>
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t.settings.title}</h1>
-        <p className="text-gray-500">{t.settings.subtitle}</p>
+        <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
+          {isZh ? "系統設定" : "Settings"}
+        </h1>
+        <p style={{ color: 'var(--muted)', marginTop: '4px' }}>
+          {isZh ? "管理你的系統偏好設定" : "Manage your system preferences"}
+        </p>
       </div>
 
       {/* General Settings */}
-      <div className="bg-white rounded-xl shadow-sm border">
-        <div className="p-6 border-b flex items-center gap-3">
-          <Globe className="text-gray-400" size={20} />
-          <h2 className="text-lg font-semibold text-gray-900">{t.settings.general}</h2>
+      <div className="card" style={{ padding: 0 }}>
+        <div style={{ 
+          padding: '20px 24px', 
+          borderBottom: '1px solid rgba(128,128,128,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <Globe size={20} style={{ color: 'var(--muted)' }} />
+          <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0 }}>
+            {isZh ? "一般設定" : "General Settings"}
+          </h2>
         </div>
-        <div className="p-6 space-y-4">
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t.settings.companyName}
+            <label style={{ 
+              display: 'block', 
+              fontSize: '14px', 
+              fontWeight: '500', 
+              marginBottom: '8px',
+              color: 'var(--foreground)'
+            }}>
+              {isZh ? "公司名稱" : "Company Name"}
             </label>
             <input
               type="text"
               value={settings.companyName}
               onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
+              className="input"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t.settings.currency}
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                marginBottom: '8px',
+                color: 'var(--foreground)'
+              }}>
+                {isZh ? "貨幣" : "Currency"}
               </label>
               <select
                 value={settings.currency}
                 onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
+                className="input"
               >
                 <option value="HKD">HKD (Hong Kong Dollar)</option>
                 <option value="USD">USD (US Dollar)</option>
@@ -63,13 +88,19 @@ export default function SettingsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t.settings.timezone}
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                marginBottom: '8px',
+                color: 'var(--foreground)'
+              }}>
+                {isZh ? "時區" : "Timezone"}
               </label>
               <select
                 value={settings.timezone}
                 onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
+                className="input"
               >
                 <option value="Asia/Hong_Kong">Asia/Hong Kong</option>
                 <option value="Asia/Shanghai">Asia/Shanghai</option>
@@ -82,139 +113,113 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Notification Settings */}
-      <div className="bg-white rounded-xl shadow-sm border">
-        <div className="p-6 border-b flex items-center gap-3">
-          <Bell className="text-gray-400" size={20} />
-          <h2 className="text-lg font-semibold text-gray-900">{t.settings.notifications}</h2>
+      {/* Notifications */}
+      <div className="card" style={{ padding: 0 }}>
+        <div style={{ 
+          padding: '20px 24px', 
+          borderBottom: '1px solid rgba(128,128,128,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <Bell size={20} style={{ color: 'var(--muted)' }} />
+          <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0 }}>
+            {isZh ? "通知設定" : "Notifications"}
+          </h2>
         </div>
-        <div className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-gray-900">{t.settings.emailNotifications}</h3>
-              <p className="text-sm text-gray-500">
-                {lang === 'zh' ? '通過電郵接收訂單更新' : 'Receive order updates via email'}
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.emailNotifications}
-                onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-gray-900">{t.settings.whatsappNotifications}</h3>
-              <p className="text-sm text-gray-500">
-                {lang === 'zh' ? '通過 WhatsApp 接收訂單更新' : 'Receive order updates via WhatsApp'}
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.whatsappNotifications}
-                onChange={(e) => setSettings({ ...settings, whatsappNotifications: e.target.checked })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
-          </div>
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <label style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            cursor: 'pointer'
+          }}>
+            <span style={{ fontSize: '14px', fontWeight: '500' }}>
+              {isZh ? "電郵通知" : "Email Notifications"}
+            </span>
+            <input
+              type="checkbox"
+              checked={settings.emailNotifications}
+              onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
+              style={{ width: '20px', height: '20px', accentColor: 'var(--primary)' }}
+            />
+          </label>
+          <label style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            cursor: 'pointer'
+          }}>
+            <span style={{ fontSize: '14px', fontWeight: '500' }}>
+              {isZh ? "WhatsApp 通知" : "WhatsApp Notifications"}
+            </span>
+            <input
+              type="checkbox"
+              checked={settings.whatsappNotifications}
+              onChange={(e) => setSettings({ ...settings, whatsappNotifications: e.target.checked })}
+              style={{ width: '20px', height: '20px', accentColor: 'var(--primary)' }}
+            />
+          </label>
         </div>
       </div>
 
       {/* AI Settings */}
-      <div className="bg-white rounded-xl shadow-sm border">
-        <div className="p-6 border-b flex items-center gap-3">
-          <Bot className="text-gray-400" size={20} />
-          <h2 className="text-lg font-semibold text-gray-900">{t.settings.aiSettings}</h2>
+      <div className="card" style={{ padding: 0 }}>
+        <div style={{ 
+          padding: '20px 24px', 
+          borderBottom: '1px solid rgba(128,128,128,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <Bot size={20} style={{ color: 'var(--muted)' }} />
+          <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0 }}>
+            {isZh ? "AI 設定" : "AI Settings"}
+          </h2>
         </div>
-        <div className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-gray-900">{t.settings.enableAI}</h3>
-              <p className="text-sm text-gray-500">
-                {lang === 'zh' ? '使用 AI 進行成本分析和推薦' : 'Use AI for cost analysis and recommendations'}
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.aiEnabled}
-                onChange={(e) => setSettings({ ...settings, aiEnabled: e.target.checked })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
-          </div>
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <label style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            cursor: 'pointer'
+          }}>
+            <span style={{ fontSize: '14px', fontWeight: '500' }}>
+              {isZh ? "啟用 AI 分析" : "Enable AI Analysis"}
+            </span>
+            <input
+              type="checkbox"
+              checked={settings.aiEnabled}
+              onChange={(e) => setSettings({ ...settings, aiEnabled: e.target.checked })}
+              style={{ width: '20px', height: '20px', accentColor: 'var(--primary)' }}
+            />
+          </label>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t.settings.minimaxApiKey}
+            <label style={{ 
+              display: 'block', 
+              fontSize: '14px', 
+              fontWeight: '500', 
+              marginBottom: '8px',
+              color: 'var(--foreground)'
+            }}>
+              {isZh ? "MiniMax API Key" : "MiniMax API Key"}
             </label>
             <input
               type="password"
-              placeholder="sk-..."
               value={settings.minimaxApiKey}
               onChange={(e) => setSettings({ ...settings, minimaxApiKey: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
+              className="input"
+              placeholder="sk-..."
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {lang === 'zh' ? '從 console.minimax.chat 獲取 API 金鑰' : 'Get your API key from console.minimax.chat'}
-            </p>
           </div>
         </div>
-      </div>
-
-      {/* Database Status */}
-      <div className="bg-white rounded-xl shadow-sm border">
-        <div className="p-6 border-b flex items-center gap-3">
-          <Database className="text-gray-400" size={20} />
-          <h2 className="text-lg font-semibold text-gray-900">{t.settings.database}</h2>
-        </div>
-        <div className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex-1 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <div>
-                  <h3 className="font-medium text-yellow-700">{t.settings.demoMode}</h3>
-                  <p className="text-sm text-yellow-600">
-                    {lang === 'zh' ? '使用模擬數據。連接真實數據庫以用於生產環境。' : 'Using mock data. Connect a real database for production.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4">
-            <a href="https://github.com/singerj295/open-purchase/blob/main/DATABASE.md" target="_blank" className="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
-              {lang === 'zh' ? '查看數據庫設置指南 →' : 'View Database Setup Guide →'}
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* Version Info */}
-      <div className="text-center text-sm text-gray-500">
-        <p>Open Purchase v0.1.0</p>
-        <p>Built with Next.js, TypeScript, Tailwind CSS</p>
-        <p className="mt-2">
-          <a href="https://github.com/singerj295/open-purchase" target="_blank" className="text-emerald-600 hover:underline">
-            GitHub Repository
-          </a>
-        </p>
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2"
-        >
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button onClick={handleSave} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Save size={18} />
-          {t.common.save}
+          {isZh ? "儲存設定" : "Save Settings"}
         </button>
       </div>
     </div>

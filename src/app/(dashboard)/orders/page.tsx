@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Plus, Search, Filter, Eye, Edit, Trash2 } from "lucide-react";
-import { useTheme } from "@/lib/i18n/ThemeContext";
 
 interface Order {
   id: string;
@@ -24,12 +23,12 @@ const mockOrders: Order[] = [
   { id: "7", orderNumber: "ORD-007", supplier: "Fresh Farm Co", items: 20, total: 380, status: "delivered", date: "2026-02-13" },
 ];
 
-const statusColors: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-700",
-  confirmed: "bg-purple-100 text-purple-700",
-  shipped: "bg-blue-100 text-blue-700",
-  delivered: "bg-emerald-100 text-emerald-700",
-  cancelled: "bg-gray-100 text-gray-600",
+const statusColors: Record<string, { bg: string; text: string }> = {
+  pending: { bg: "rgba(251, 191, 36, 0.15)", text: "#d97706" },
+  confirmed: { bg: "rgba(139, 92, 246, 0.15)", text: "#7c3aed" },
+  shipped: { bg: "rgba(59, 130, 246, 0.15)", text: "#2563eb" },
+  delivered: { bg: "rgba(16, 185, 129, 0.15)", text: "#059669" },
+  cancelled: { bg: "rgba(107, 114, 128, 0.15)", text: "#6b7280" },
 };
 
 const statusLabels: Record<string, { en: string; zh: string }> = {
@@ -41,10 +40,12 @@ const statusLabels: Record<string, { en: string; zh: string }> = {
 };
 
 export default function OrdersPage() {
-  const { lang } = useTheme() as { lang: "en" | "zh" };
   const [orders] = useState<Order[]>(mockOrders);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [lang, setLang] = useState<"en" | "zh">("zh");
+
+  const isZh = lang === "zh";
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -55,122 +56,116 @@ export default function OrdersPage() {
   });
 
   const stats = [
-    { label: "Total Orders", labelZh: "總訂單", value: orders.length },
-    { label: "Pending", labelZh: "待處理", value: orders.filter((o) => o.status === "pending").length },
-    { label: "Delivered", labelZh: "已送達", value: orders.filter((o) => o.status === "delivered").length },
-    { label: "Total Value", labelZh: "總額", value: `$${orders.reduce((sum, o) => sum + o.total, 0)}` },
+    { label: "Total Orders", labelZh: "總訂單", value: orders.length, color: "#3b82f6" },
+    { label: "Pending", labelZh: "待處理", value: orders.filter((o) => o.status === "pending").length, color: "#f97316" },
+    { label: "Delivered", labelZh: "已送達", value: orders.filter((o) => o.status === "delivered").length, color: "#10b981" },
+    { label: "Total Value", labelZh: "總額", value: `$${orders.reduce((sum, o) => sum + o.total, 0)}`, color: "#8b5cf6" },
   ];
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t.orders.title}</h1>
-          <p className="text-gray-500">{t.orders.subtitle}</p>
+          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
+            {isZh ? "訂單管理" : "Orders"}
+          </h1>
+          <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>
+            {isZh ? "管理你的採購訂單" : "Manage your purchase orders"}
+          </p>
         </div>
-        <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2">
-          <Plus size={20} />
-          {t.orders.newOrder}
+        <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Plus size={18} />
+          {isZh ? "新增訂單" : "New Order"}
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm border">
-            <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-            <p className="text-gray-500 text-sm">{lang === 'zh' ? stat.labelZh : stat.label}</p>
+          <div key={stat.label} className="stat-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{isZh ? stat.labelZh : stat.label}</p>
+                <p style={{ fontSize: '24px', fontWeight: '600', margin: '8px 0 0 0' }}>{stat.value}</p>
+              </div>
+              <div style={{ padding: '10px', borderRadius: '12px', background: `${stat.color}15` }}>
+                <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: stat.color }} />
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+          <Search
+            style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }}
+            size={18}
+          />
           <input
             type="text"
-            placeholder={t.common.search + "..."}
+            placeholder={isZh ? "搜尋訂單..." : "Search orders..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
+            className="search-input"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="input"
+          style={{ width: '150px' }}
         >
-          <option value="all">{t.common.filter}</option>
-          <option value="pending">{t.orders.pending}</option>
-          <option value="confirmed">{t.orders.confirmed}</option>
-          <option value="shipped">{t.orders.shipped}</option>
-          <option value="delivered">{t.orders.delivered}</option>
-          <option value="cancelled">{t.orders.cancelled}</option>
+          <option value="all">{isZh ? "全部狀態" : "All Status"}</option>
+          <option value="pending">{isZh ? "待處理" : "Pending"}</option>
+          <option value="confirmed">{isZh ? "已確認" : "Confirmed"}</option>
+          <option value="shipped">{isZh ? "已發貨" : "Shipped"}</option>
+          <option value="delivered">{isZh ? "已送達" : "Delivered"}</option>
+          <option value="cancelled">{isZh ? "已取消" : "Cancelled"}</option>
         </select>
       </div>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <table>
+          <thead>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t.orders.orderNumber}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t.orders.supplier}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t.orders.items}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t.orders.total}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t.orders.status}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t.orders.date}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t.orders.actions}
-              </th>
+              <th>{isZh ? "訂單編號" : "Order #"}</th>
+              <th>{isZh ? "供應商" : "Supplier"}</th>
+              <th>{isZh ? "項目" : "Items"}</th>
+              <th>{isZh ? "總額" : "Total"}</th>
+              <th>{isZh ? "狀態" : "Status"}</th>
+              <th>{isZh ? "日期" : "Date"}</th>
+              <th></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody>
             {filteredOrders.map((order) => (
-              <tr key={order.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-emerald-600">
-                  {order.orderNumber}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {order.supplier}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {order.items}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  ${order.total}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
-                    {statusLabels[order.status]?.[lang] || order.status}
+              <tr key={order.id}>
+                <td style={{ fontWeight: '600', color: 'var(--primary)' }}>{order.orderNumber}</td>
+                <td>{order.supplier}</td>
+                <td>{order.items}</td>
+                <td style={{ fontWeight: '500' }}>${order.total}</td>
+                <td>
+                  <span
+                    className="badge"
+                    style={{ background: statusColors[order.status].bg, color: statusColors[order.status].text }}
+                  >
+                    {isZh ? statusLabels[order.status].zh : statusLabels[order.status].en}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {order.date}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <div className="flex gap-2">
-                    <button className="p-1 hover:bg-gray-100 rounded">
+                <td style={{ color: 'var(--muted)' }}>{order.date}</td>
+                <td>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
                       <Eye size={16} />
                     </button>
-                    <button className="p-1 hover:bg-gray-100 rounded">
+                    <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
                       <Edit size={16} />
                     </button>
-                    <button className="p-1 hover:bg-gray-100 rounded text-red-500">
+                    <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444' }}>
                       <Trash2 size={16} />
                     </button>
                   </div>
