@@ -6,7 +6,6 @@ import {
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   PieChart,
@@ -14,7 +13,6 @@ import {
   Cell,
   LineChart,
   Line,
-  Legend,
 } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users } from "lucide-react";
 
@@ -53,129 +51,131 @@ const weeklyOrders = [
 ];
 
 export default function AnalyticsPage() {
+  const [lang, setLang] = useState<"en" | "zh">("zh");
+  const isZh = lang === "zh";
+
   const metrics = [
     {
-      label: "Total Spend",
+      label: isZh ? "總支出" : "Total Spend",
       value: "$42,650",
       change: "+12%",
       trend: "up",
       icon: DollarSign,
-      color: "text-emerald-600",
-      bg: "bg-emerald-100",
+      color: "#10b981",
     },
     {
-      label: "Total Orders",
+      label: isZh ? "總訂單" : "Total Orders",
       value: "156",
       change: "+8%",
       trend: "up",
       icon: ShoppingCart,
-      color: "text-blue-600",
-      bg: "bg-blue-100",
+      color: "#3b82f6",
     },
     {
-      label: "Avg Order Value",
+      label: isZh ? "平均訂單價值" : "Avg Order Value",
       value: "$273",
       change: "-3%",
       trend: "down",
       icon: TrendingDown,
-      color: "text-red-600",
-      bg: "bg-red-100",
+      color: "#ef4444",
     },
     {
-      label: "Active Suppliers",
+      label: isZh ? "活躍供應商" : "Active Suppliers",
       value: "24",
       change: "+2",
       trend: "up",
       icon: Users,
-      color: "text-purple-600",
-      bg: "bg-purple-100",
+      color: "#8b5cf6",
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-        <p className="text-gray-500">Track your procurement performance</p>
+        <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
+          {isZh ? "數據分析" : "Analytics"}
+        </h1>
+        <p style={{ color: 'var(--muted)', marginTop: '4px' }}>
+          {isZh ? "追蹤你的採購表現" : "Track your procurement performance"}
+        </p>
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((metric) => (
-          <div key={metric.label} className="bg-white rounded-xl p-6 shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div className={`p-3 rounded-lg ${metric.bg}`}>
-                <metric.icon className={metric.color} size={24} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+        {metrics.map((metric, index) => (
+          <div key={index} className="stat-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{metric.label}</p>
+                <p style={{ fontSize: '28px', fontWeight: '600', margin: '8px 0 0 0' }}>{metric.value}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                  {metric.trend === 'up' ? (
+                    <TrendingUp size={16} color="#10b981" />
+                  ) : (
+                    <TrendingDown size={16} color="#ef4444" />
+                  )}
+                  <span style={{ 
+                    fontSize: '13px', 
+                    color: metric.trend === 'up' ? '#10b981' : '#ef4444' 
+                  }}>
+                    {metric.change}
+                  </span>
+                </div>
               </div>
-              <span
-                className={`flex items-center gap-1 text-sm font-medium ${
-                  metric.trend === "up" ? "text-emerald-600" : "text-red-600"
-                }`}
-              >
-                {metric.change}
-                {metric.trend === "up" ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-              </span>
-            </div>
-            <div className="mt-4">
-              <h3 className="text-2xl font-bold text-gray-900">{metric.value}</h3>
-              <p className="text-gray-500 text-sm">{metric.label}</p>
+              <div style={{ padding: '12px', borderRadius: '12px', background: `${metric.color}15` }}>
+                <metric.icon size={24} color={metric.color} />
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Charts */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
         {/* Monthly Spend */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Spend Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
+        <div className="card" style={{ padding: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
+            {isZh ? "月度支出趨勢" : "Monthly Spend Trend"}
+          </h3>
+          <ResponsiveContainer width="100%" height={250}>
             <LineChart data={monthlySpend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
+              <XAxis 
+                dataKey="month" 
+                axisLine={false} 
+                tickLine={false}
+                tick={{ fill: 'var(--muted)', fontSize: 12 }}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false}
+                tick={{ fill: 'var(--muted)', fontSize: 12 }}
+              />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  background: 'var(--card-bg)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px var(--shadow)',
                 }}
               />
-              <Line type="monotone" dataKey="spend" stroke="#10b981" strokeWidth={2} dot={{ fill: "#10b981" }} />
+              <Line 
+                type="monotone" 
+                dataKey="spend" 
+                stroke="var(--primary)" 
+                strokeWidth={3}
+                dot={{ fill: 'var(--primary)', strokeWidth: 2 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Weekly Orders */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Orders</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={weeklyOrders}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="day" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                }}
-              />
-              <Bar dataKey="orders" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Second Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Category Breakdown */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Spend by Category</h3>
-          <ResponsiveContainer width="100%" height={300}>
+        <div className="card" style={{ padding: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
+            {isZh ? "支出分類" : "Spend by Category"}
+          </h3>
+          <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
                 data={categoryData}
@@ -183,7 +183,7 @@ export default function AnalyticsPage() {
                 cy="50%"
                 innerRadius={60}
                 outerRadius={100}
-                paddingAngle={2}
+                paddingAngle={5}
                 dataKey="value"
               >
                 {categoryData.map((entry, index) => (
@@ -192,42 +192,64 @@ export default function AnalyticsPage() {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  background: 'var(--card-bg)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px var(--shadow)',
                 }}
               />
             </PieChart>
           </ResponsiveContainer>
-          <div className="flex flex-wrap justify-center gap-4 mt-4">
-            {categoryData.map((cat) => (
-              <div key={cat.name} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                <span className="text-sm text-gray-600">{cat.name}</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
+            {categoryData.map((item) => (
+              <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: item.color }} />
+                <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{item.name}</span>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Supplier Performance */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Supplier Performance</h3>
-          <div className="space-y-4">
+      {/* Supplier Performance Table */}
+      <div className="card" style={{ padding: '24px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
+          {isZh ? "供應商表現" : "Supplier Performance"}
+        </h3>
+        <table>
+          <thead>
+            <tr>
+              <th>{isZh ? "供應商" : "Supplier"}</th>
+              <th>{isZh ? "訂單數" : "Orders"}</th>
+              <th>{isZh ? "評分" : "Rating"}</th>
+              <th>{isZh ? "支出" : "Spend"}</th>
+            </tr>
+          </thead>
+          <tbody>
             {supplierPerformance.map((supplier) => (
-              <div key={supplier.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <h4 className="font-medium text-gray-900">{supplier.name}</h4>
-                  <p className="text-sm text-gray-500">{supplier.orders} orders</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">${supplier.spend.toLocaleString()}</p>
-                  <p className="text-sm text-emerald-600">★ {supplier.rating}</p>
-                </div>
-              </div>
+              <tr key={supplier.name}>
+                <td style={{ fontWeight: '500' }}>{supplier.name}</td>
+                <td>{supplier.orders}</td>
+                <td>
+                  <span style={{ 
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    background: 'rgba(16, 185, 129, 0.15)',
+                    color: '#059669',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                  }}>
+                    {supplier.rating} ★
+                  </span>
+                </td>
+                <td style={{ fontWeight: '500' }}>${supplier.spend.toLocaleString()}</td>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   );
