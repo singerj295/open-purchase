@@ -1,11 +1,10 @@
 "use client";
 
-import { useTheme, translations } from "@/lib/i18n/ThemeContext";
+import { useTheme } from "@/lib/i18n/ThemeContext";
 import { Sun, Moon, Globe } from "lucide-react";
 
 export default function ThemeSwitcher() {
-  const { dark, toggleDark, lang, setLang } = useTheme();
-  const t = translations[lang];
+  const { dark, toggleDark, lang, t } = useTheme();
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

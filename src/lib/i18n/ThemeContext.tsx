@@ -1,9 +1,25 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { translations } from "./translations";
 
 type Lang = "en" | "zh";
+
+const translations = {
+  en: {
+    darkMode: "Dark Mode",
+    lightMode: "Light Mode",
+    language: "Language",
+    chinese: "中文",
+    english: "English",
+  },
+  zh: {
+    darkMode: "深色模式",
+    lightMode: "淺色模式",
+    language: "語言",
+    chinese: "中文",
+    english: "English",
+  },
+};
 
 interface ThemeState {
   dark: boolean;
