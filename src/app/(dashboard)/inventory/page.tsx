@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search, AlertTriangle, CheckCircle, TrendingUp, Calendar, Download } from "lucide-react";
+import { Plus, Search, AlertTriangle, CheckCircle, TrendingUp, Calendar, Download, Eye, Edit, Trash2 } from "lucide-react";
 import { useTheme } from "@/lib/i18n/ThemeContext";
 
 interface InventoryItem {
@@ -27,11 +27,13 @@ const mockInventory: InventoryItem[] = [
 ];
 
 export default function InventoryPage() {
-  const { lang, t } = useTheme();
+  const { lang } = useTheme() as { lang: "en" | "zh" };
   const [inventory] = useState<InventoryItem[]>(mockInventory);
   const [search, setSearch] = useState("");
   const [expiryFilter, setExpiryFilter] = useState("all");
 
+  const currentLang = lang as "en" | "zh";
+  const isZh = currentLang === "zh";
 
   const filteredInventory = inventory.filter((item) => {
     const matchesSearch =
@@ -74,43 +76,39 @@ export default function InventoryPage() {
 
   const stats = [
     { 
-      label: "Total Items", 
-      labelZh: "總物品", 
+      label: isZh ? "總物品" : "Total Items", 
       value: inventory.length, 
       icon: TrendingUp, 
-      color: "text-blue-600", 
-      bg: "bg-blue-100" 
+      color: "#3b82f6" 
     },
     { 
-      label: "Low Stock", 
-      labelZh: "低庫存", 
+      label: isZh ? "低庫存" : "Low Stock", 
       value: lowStockItems.length, 
       icon: AlertTriangle, 
-      color: "text-red-600", 
-      bg: "bg-red-100" 
+      color: "#ef4444" 
     },
     { 
-      label: "Expiring Soon", 
-      labelZh: "即將過期", 
+      label: isZh ? "即將過期" : "Expiring Soon", 
       value: warningItems.length, 
       icon: Calendar, 
-      color: "text-yellow-600", 
-      bg: "bg-yellow-100" 
+      color: "#f97316" 
     },
     { 
-      label: "Total Value", 
-      labelZh: "總價值", 
+      label: isZh ? "總價值" : "Total Value", 
       value: `$${totalValue}`, 
       icon: TrendingUp, 
-      color: "text-purple-600", 
-      bg: "bg-purple-100" 
+      color: "#8b5cf6" 
     },
   ];
 
   const getStockStatus = (item: InventoryItem) => {
-    if (item.quantity <= item.minStock) return { label: t.$1), color: "bg-red-100 text-red-700" };
-    if (item.quantity >= item.maxStock) return { label: t.$1), color: "bg-yellow-100 text-yellow-700" };
-    return { label: t.$1), color: "bg-emerald-100 text-emerald-700" };
+    if (item.quantity <= item.minStock) {
+      return { label: isZh ? "低" : "Low", color: "bg-red-100 text-red-700" };
+    }
+    if (item.quantity >= item.maxStock) {
+      return { label: isZh ? "過多" : "Overstock", color: "bg-yellow-100 text-yellow-700" };
+    }
+    return { label: isZh ? "正常" : "Healthy", color: "bg-emerald-100 text-emerald-700" };
   };
 
   const getExpiryStatus = (expiryDate: string) => {
@@ -120,195 +118,174 @@ export default function InventoryPage() {
     
     if (daysUntilExpiry <= 0) {
       return { 
-        label: t.$1), 
+        label: isZh ? "已過期" : "Expired", 
         color: "bg-red-100 text-red-700",
-        days: t.$1)
       };
     }
     if (daysUntilExpiry <= 7) {
       return { 
-        label: t.$1), 
+        label: isZh ? "即將過期" : "Expiring Soon", 
         color: "bg-yellow-100 text-yellow-700",
-        days: `${daysUntilExpiry}${t.$1)}`
       };
     }
     return { 
-      label: t.$1), 
+      label: isZh ? "正常" : "OK", 
       color: "bg-emerald-100 text-emerald-700",
-      days: `${daysUntilExpiry}${t.$1)}`
     };
   };
 
-  const getStockPercentage = (item: InventoryItem) => Math.min((item.quantity / item.maxStock) * 100, 100);
-
-  const handleExport = () => {
-    alert(t.$1);
-  };
-
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t.inventory.title}</h1>
-          <p className="text-gray-500">{t.inventory.subtitle}</p>
+          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
+            {isZh ? "庫存管理" : "Inventory"}
+          </h1>
+          <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>
+            {isZh ? "追蹤食材庫存和有效期限" : "Track ingredient stock levels and expiry dates"}
+          </p>
         </div>
-        <div className="flex gap-2">
-          <button 
-            onClick={handleExport}
-            className="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2"
-          >
-            <Download size={20} />
-            {t.$1)}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Download size={18} />
+            {isZh ? "導出" : "Export"}
           </button>
-          <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2">
-            <Plus size={20} />
-            {t.$1)}
+          <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Plus size={18} />
+            {isZh ? "新增物品" : "Add Item"}
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm border">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${stat.bg}`}>
-                <stat.icon className={stat.color} size={20} />
-              </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+        {stats.map((stat, index) => (
+          <div key={index} className="stat-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                <p className="text-gray-500 text-sm">{lang === 'zh' ? stat.labelZh : stat.label}</p>
+                <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{stat.label}</p>
+                <p style={{ fontSize: '28px', fontWeight: '600', margin: '8px 0 0 0' }}>{stat.value}</p>
+              </div>
+              <div style={{ padding: '12px', borderRadius: '12px', background: `${stat.color}15` }}>
+                <stat.icon size={24} color={stat.color} />
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Low Stock Alert */}
-      {lowStockItems.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <h3 className="font-semibold text-red-700 flex items-center gap-2">
-            <AlertTriangle size={20} />
-            {t.$1)}
-          </h3>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {lowStockItems.map((item) => (
-              <span key={item.id} className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">
-                {item.product}: {item.quantity}/{item.minStock}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Expiry Alert */}
-      {(expiredItems.length > 0 || warningItems.length > 0) && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <h3 className="font-semibold text-yellow-700 flex items-center gap-2">
-            <Calendar size={20} />
-            {t.$1)}
-          </h3>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {expiredItems.map((item) => (
-              <span key={item.id} className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm flex items-center gap-1">
-                ❌ {item.product} - {t.$1)}
-              </span>
-            ))}
-            {warningItems.map((item) => {
-              const daysUntilExpiry = Math.ceil(
-                (new Date(item.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-              );
-              return (
-                <span key={item.id} className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm flex items-center gap-1">
-                  ⚠️ {item.product} - {daysUntilExpiry}{t.$1)}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {/* Filters */}
-      <div className="flex gap-4 flex-wrap">
-        <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+          <Search
+            style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }}
+            size={18}
+          />
           <input
             type="text"
-            placeholder={t.$1)}
+            placeholder={isZh ? "搜尋物品..." : "Search items..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
+            className="search-input"
           />
         </div>
         <select
           value={expiryFilter}
           onChange={(e) => setExpiryFilter(e.target.value)}
-          className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
+          className="input"
+          style={{ width: '180px' }}
         >
-          <option value="all">{t.$1)}</option>
-          <option value="ok">{t.$1)}</option>
-          <option value="warning">{t.$1)}</option>
-          <option value="expired">{t.$1)}</option>
+          <option value="all">{isZh ? "全部有效期" : "All Expiry"}</option>
+          <option value="ok">{isZh ? "正常" : "OK"}</option>
+          <option value="warning">{isZh ? "即將過期" : "Expiring Soon"}</option>
+          <option value="expired">{isZh ? "已過期" : "Expired"}</option>
         </select>
       </div>
 
-      {/* Inventory Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredInventory.map((item) => {
-          const status = getStockStatus(item);
-          const expiry = getExpiryStatus(item.expiryDate);
-          const percentage = getStockPercentage(item);
-          
-          return (
-            <div key={item.id} className={`bg-white rounded-xl p-6 shadow-sm border ${expiredItems.find(e => e.id === item.id) ? 'border-red-300' : ''}`}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{item.product}</h3>
-                  <p className="text-sm text-gray-500">{item.category}</p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${status.color}`}>
-                    {status.label}
-                  </span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${expiry.color}`}>
-                    {expiry.days}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-500">{t.inventory.quantity}</span>
-                  <span className="font-medium">{item.quantity}/{item.maxStock}</span>
-                </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${
-                      percentage > 80 ? "bg-yellow-500" : percentage > 50 ? "bg-emerald-500" : "bg-red-500"
-                    }`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t flex justify-between text-sm text-gray-500">
-                <span>{t.$1)} {item.minStock}</span>
-                <span className="flex items-center gap-1">
-                  <Calendar size={14} />
-                  {item.expiryDate}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+      {/* Inventory Table */}
+      <div className="card" style={{ padding: 0 }}>
+        <table>
+          <thead>
+            <tr>
+              <th>{isZh ? "產品" : "Product"}</th>
+              <th>{isZh ? "類別" : "Category"}</th>
+              <th>{isZh ? "數量" : "Quantity"}</th>
+              <th>{isZh ? "狀態" : "Status"}</th>
+              <th>{isZh ? "有效日期" : "Expiry Date"}</th>
+              <th>{isZh ? "位置" : "Location"}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredInventory.map((item) => {
+              const stockStatus = getStockStatus(item);
+              const expiryStatus = getExpiryStatus(item.expiryDate);
+              return (
+                <tr key={item.id}>
+                  <td style={{ fontWeight: '500' }}>{item.product}</td>
+                  <td style={{ color: 'var(--muted)' }}>{item.category}</td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ 
+                        width: '60px', 
+                        height: '6px', 
+                        background: 'var(--background)', 
+                        borderRadius: '3px',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{ 
+                          width: `${Math.min((item.quantity / item.maxStock) * 100, 100)}%`, 
+                          height: '100%', 
+                          background: item.quantity <= item.minStock ? '#ef4444' : 'var(--primary)',
+                          borderRadius: '3px'
+                        }} />
+                      </div>
+                      <span>{item.quantity}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="badge" style={{ 
+                      background: stockStatus.color.includes('red') ? 'rgba(239, 68, 68, 0.15)' : 
+                                  stockStatus.color.includes('yellow') ? 'rgba(251, 191, 36, 0.15)' : 
+                                  'rgba(16, 185, 129, 0.15)',
+                      color: stockStatus.color.includes('red') ? '#ef4444' : 
+                             stockStatus.color.includes('yellow') ? '#d97706' : '#059669'
+                    }}>
+                      {stockStatus.label}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="badge" style={{ 
+                      background: expiryStatus.color.includes('red') ? 'rgba(239, 68, 68, 0.15)' : 
+                                  expiryStatus.color.includes('yellow') ? 'rgba(251, 191, 36, 0.15)' : 
+                                  'rgba(16, 185, 129, 0.15)',
+                      color: expiryStatus.color.includes('red') ? '#ef4444' : 
+                             expiryStatus.color.includes('yellow') ? '#d97706' : '#059669'
+                    }}>
+                      {expiryStatus.label}
+                    </span>
+                  </td>
+                  <td style={{ color: 'var(--muted)' }}>{item.location}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
+                        <Eye size={16} />
+                      </button>
+                      <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
+                        <Edit size={16} />
+                      </button>
+                      <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444' }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-
-      {filteredInventory.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          {t.$1)}
-        </div>
-      )}
     </div>
   );
 }

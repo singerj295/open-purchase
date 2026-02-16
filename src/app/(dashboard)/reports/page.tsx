@@ -20,10 +20,12 @@ const mockReports: Report[] = [
 ];
 
 export default function ReportsPage() {
-  const { lang, t } = useTheme();
+  const { lang } = useTheme() as { lang: "en" | "zh" };
   const [selectedType, setSelectedType] = useState("all");
   const [dateRange, setDateRange] = useState("month");
 
+  const currentLang = lang as "en" | "zh";
+  const isZh = currentLang === "zh";
 
   const filteredReports = mockReports.filter(
     (r) => selectedType === "all" || r.type === selectedType
@@ -31,72 +33,54 @@ export default function ReportsPage() {
 
   const stats = [
     { 
-      label: t.$1), 
+      label: isZh ? "總訂單" : "Total Orders", 
       value: "156", 
       icon: ShoppingCart, 
-      color: "text-blue-600",
-      bg: "bg-blue-100" 
+      color: "#3b82f6",
     },
     { 
-      label: t.$1), 
+      label: isZh ? "總支出" : "Total Spend", 
       value: "$42,650", 
       icon: DollarSign, 
-      color: "text-emerald-600",
-      bg: "bg-emerald-100" 
+      color: "#10b981",
     },
     { 
-      label: t.$1), 
+      label: isZh ? "供應商數" : "Suppliers", 
       value: "24", 
       icon: Package, 
-      color: "text-purple-600",
-      bg: "bg-purple-100" 
+      color: "#8b5cf6",
     },
-  ];
-
-  const reportTypes = [
-    { value: "all", label: t.$1) },
-    { value: "orders", label: t.$1) },
-    { value: "inventory", label: t.$1) },
-    { value: "spend", label: t.$1) },
-    { value: "suppliers", label: t.$1) },
-  ];
-
-  const dateRanges = [
-    { value: "week", label: t.$1) },
-    { value: "month", label: t.$1) },
-    { value: "quarter", label: t.$1) },
-    { value: "year", label: t.$1) },
   ];
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {t.$1)}
+          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
+            {isZh ? "報告" : "Reports"}
           </h1>
-          <p className="text-gray-500">
-            {t.$1)}
+          <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>
+            {isZh ? "生成和分析業務報告" : "Generate and analyze business reports"}
           </p>
         </div>
-        <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2">
-          <FileText size={20} />
-          {t.$1)}
+        <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FileText size={18} />
+          {isZh ? "生成報告" : "Generate Report"}
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl p-6 shadow-sm border">
-            <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${stat.bg}`}>
-                <stat.icon className={stat.color} size={24} />
-              </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+        {stats.map((stat, index) => (
+          <div key={index} className="stat-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                <p className="text-gray-500 text-sm">{stat.label}</p>
+                <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{stat.label}</p>
+                <p style={{ fontSize: '28px', fontWeight: '600', margin: '8px 0 0 0' }}>{stat.value}</p>
+              </div>
+              <div style={{ padding: '12px', borderRadius: '12px', background: `${stat.color}15` }}>
+                <stat.icon size={24} color={stat.color} />
               </div>
             </div>
           </div>
@@ -104,138 +88,68 @@ export default function ReportsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t.$1)}
-            </label>
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
-            >
-              {reportTypes.map((rt) => (
-                <option key={rt.value} value={rt.value}>
-                  {rt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Calendar size={16} className="inline mr-1" />
-              {t.$1)}
-            </label>
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
-            >
-              {dateRanges.map((dr) => (
-                <option key={dr.value} value={dr.value}>
-                  {dr.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center justify-center gap-2">
-              <Download size={20} />
-              {t.$1)}
-            </button>
-          </div>
-        </div>
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <select
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+          className="input"
+          style={{ width: '180px' }}
+        >
+          <option value="all">{isZh ? "全部類型" : "All Types"}</option>
+          <option value="orders">{isZh ? "訂單" : "Orders"}</option>
+          <option value="inventory">{isZh ? "庫存" : "Inventory"}</option>
+          <option value="spend">{isZh ? "支出" : "Spend"}</option>
+          <option value="suppliers">{isZh ? "供應商" : "Suppliers"}</option>
+        </select>
+        <select
+          value={dateRange}
+          onChange={(e) => setDateRange(e.target.value)}
+          className="input"
+          style={{ width: '150px' }}
+        >
+          <option value="week">{isZh ? "本週" : "This Week"}</option>
+          <option value="month">{isZh ? "本月" : "This Month"}</option>
+          <option value="quarter">{isZh ? "本季" : "This Quarter"}</option>
+          <option value="year">{isZh ? "本年" : "This Year"}</option>
+        </select>
       </div>
 
-      {/* Reports List */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-6 border-b">
-          <h3 className="font-semibold text-gray-900">
-            {t.$1)}
-          </h3>
-        </div>
-        <table className="w-full">
-          <thead className="bg-gray-50">
+      {/* Reports Table */}
+      <div className="card" style={{ padding: '24px' }}>
+        <table>
+          <thead>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                {t.$1)}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                {t.$1)}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                {t.$1)}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                {t.$1)}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                {t.$1)}
-              </th>
+              <th>{isZh ? "報告名稱" : "Report Name"}</th>
+              <th>{isZh ? "類型" : "Type"}</th>
+              <th>{isZh ? "最後生成" : "Last Generated"}</th>
+              <th>{isZh ? "格式" : "Format"}</th>
+              <th></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody>
             {filteredReports.map((report) => (
-              <tr key={report.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <FileText className="text-gray-400" size={20} />
-                    <span className="font-medium text-gray-900">{report.name}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+              <tr key={report.id}>
+                <td style={{ fontWeight: '500' }}>{report.name}</td>
+                <td>
+                  <span className="badge" style={{ background: 'rgba(45, 158, 109, 0.15)', color: 'var(--primary)' }}>
                     {report.type}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  {report.lastGenerated}
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 uppercase">
-                    {report.format}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <button className="p-2 hover:bg-gray-100 rounded-lg flex items-center gap-1 text-emerald-600">
+                <td style={{ color: 'var(--muted)' }}>{report.lastGenerated}</td>
+                <td style={{ textTransform: 'uppercase', fontSize: '12px', color: 'var(--muted)' }}>{report.format}</td>
+                <td>
+                  <button
+                    className="btn-secondary"
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
                     <Download size={16} />
-                    <span className="text-sm">{t.$1)}</span>
+                    {isZh ? "下載" : "Download"}
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
-
-      {/* Quick Reports */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border">
-        <h3 className="font-semibold text-gray-900 mb-4">
-          {t.$1)}
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button className="p-4 border rounded-lg hover:bg-gray-50 text-left">
-            <FileText className="text-blue-500 mb-2" size={24} />
-            <p className="font-medium text-gray-900">{t.$1)}</p>
-            <p className="text-sm text-gray-500">{t.$1)}</p>
-          </button>
-          <button className="p-4 border rounded-lg hover:bg-gray-50 text-left">
-            <Package className="text-purple-500 mb-2" size={24} />
-            <p className="font-medium text-gray-900">{t.$1)}</p>
-            <p className="text-sm text-gray-500">{t.$1)}</p>
-          </button>
-          <button className="p-4 border rounded-lg hover:bg-gray-50 text-left">
-            <DollarSign className="text-emerald-500 mb-2" size={24} />
-            <p className="font-medium text-gray-900">{t.$1)}</p>
-            <p className="text-sm text-gray-500">{t.$1)}</p>
-          </button>
-          <button className="p-4 border rounded-lg hover:bg-gray-50 text-left">
-            <ShoppingCart className="text-orange-500 mb-2" size={24} />
-            <p className="font-medium text-gray-900">{t.$1)}</p>
-            <p className="text-sm text-gray-500">{t.$1)}</p>
-          </button>
-        </div>
       </div>
     </div>
   );

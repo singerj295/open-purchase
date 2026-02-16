@@ -3,11 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useTheme } from "@/lib/i18n/ThemeContext";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 function LoginForm() {
-  const { lang, t } = useTheme();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,97 +27,100 @@ function LoginForm() {
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error || (lang === 'zh' ? "登入失敗" : "Login failed"));
+        throw new Error(data.error || "登入失敗");
       }
 
       router.push("/");
       router.refresh();
     } catch (err: any) {
-      setError(err.message || (lang === 'zh' ? "登入失敗" : "Login failed"));
+      setError(err.message || "登入失敗");
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center">
       {/* Theme/Language Switcher */}
-      <div className="absolute top-4 right-4">
+      <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
         <ThemeSwitcher />
       </div>
       
-      <div className="max-w-md w-full">
+      <div style={{ maxWidth: '400px', width: '100%' }}>
         {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-emerald-600">🍽️ Open Purchase</h1>
-          <p className="text-gray-500 mt-2">{t.$1)}</p>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>🍽️ Open Purchase</h1>
+          <p style={{ color: 'var(--muted)', marginTop: '8px' }}>登入你的帳戶</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border p-8">
-          <form onSubmit={handleLogin} className="space-y-6">
+        <div className="card" style={{ padding: '32px' }}>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {error && (
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+              <div style={{ 
+                padding: '12px', 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                borderRadius: '8px' 
+              }}>
+                <p style={{ color: '#ef4444', fontSize: '14px', margin: 0 }}>{error}</p>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t.auth.email}
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                marginBottom: '8px',
+                color: 'var(--foreground)'
+              }}>
+                電子郵件
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="you@example.com"
+                className="input"
+                placeholder="輸入你的電子郵件"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t.auth.password}
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                marginBottom: '8px',
+                color: 'var(--foreground)'
+              }}>
+                密碼
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="••••••••"
+                className="input"
+                placeholder="輸入你的密碼"
                 required
               />
             </div>
 
             <button
               type="submit"
+              className="btn-primary"
               disabled={loading}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium rounded-lg text-white"
+              style={{ width: '100%', opacity: loading ? 0.7 : 1 }}
             >
-              {loading ? t.$1) : t.auth.login}
+              {loading ? "登入中..." : "登入"}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-500 dark:text-gray-400">
-              {t.$1)}{" "}
-              <Link href="/signup" className="text-emerald-600 hover:text-emerald-700 font-medium">
-                {t.auth.signUp}
-              </Link>
-            </p>
-          </div>
-        </div>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-          <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium mb-2">🎉 {t.$1)}</p>
-          <p className="text-xs text-emerald-600 dark:text-emerald-500">
-            {t.auth.email}: <code className="bg-emerald-100 dark:bg-emerald-900 px-1 rounded">demo@example.com</code>
-          </p>
-          <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">
-            {t.auth.password}: <code className="bg-emerald-100 dark:bg-emerald-900 px-1 rounded">demo123456</code>
+          <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--muted)', fontSize: '14px' }}>
+            還沒有帳戶？{" "}
+            <Link href="/signup" style={{ color: 'var(--primary)', fontWeight: '500' }}>
+              註冊
+            </Link>
           </p>
         </div>
       </div>
