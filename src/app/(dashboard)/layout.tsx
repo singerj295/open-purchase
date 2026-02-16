@@ -15,8 +15,8 @@ import {
   Bell,
   Search,
 } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTheme } from "@/lib/i18n/ThemeContext";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 export default function DashboardLayout({
   children,
@@ -31,7 +31,7 @@ function DashboardLayoutInner({
 }: {
   children: React.ReactNode;
 }) {
-  const { lang } = useLanguage();
+  const { lang, t } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const menuItems = [
@@ -103,7 +103,7 @@ function DashboardLayoutInner({
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <LanguageSwitcher />
+            <ThemeSwitcher />
             <button className="relative p-2 hover:bg-gray-100 rounded-lg">
               <Bell size={20} />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
