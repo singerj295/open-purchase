@@ -81,6 +81,7 @@ export default function SuppliersPage() {
         isActive: true,
       };
       setSuppliers([...suppliers, supplier]);
+      localStorage.setItem('open-purchase-suppliers', JSON.stringify([...suppliers, supplier]));
       setShowModal(false);
       setNewSupplier({ name: "", contact: "", phone: "", email: "", address: "", deliveryDay: "", moq: "", category: "", notes: "" });
     }
@@ -88,7 +89,9 @@ export default function SuppliersPage() {
 
   const handleDeleteSupplier = (id: string) => {
     if (confirm(isZh ? "確定刪除此供應商？" : "Delete this supplier?")) {
-      setSuppliers(suppliers.filter(s => s.id !== id));
+      const updated = suppliers.filter(s => s.id !== id);
+      setSuppliers(updated);
+      localStorage.setItem('open-purchase-suppliers', JSON.stringify(updated));
     }
   };
 

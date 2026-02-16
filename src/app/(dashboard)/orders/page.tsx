@@ -100,6 +100,7 @@ export default function OrdersPage() {
         date: new Date().toISOString().split('T')[0],
       };
       setOrders([order, ...orders]);
+      localStorage.setItem('open-purchase-orders', JSON.stringify([order, ...orders]));
       setShowModal(false);
       setNewOrder({ supplier: "", product: "", items: "", total: "" });
     }
@@ -107,7 +108,9 @@ export default function OrdersPage() {
 
   const handleDeleteOrder = (id: string) => {
     if (confirm(isZh ? "確定刪除此訂單？" : "Delete this order?")) {
-      setOrders(orders.filter(o => o.id !== id));
+      const updated = orders.filter(o => o.id !== id);
+      setOrders(updated);
+      localStorage.setItem('open-purchase-orders', JSON.stringify(updated));
     }
   };
 
