@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // OpenClaw AI API Key System
 // Enables OpenClaw assistant AIs to access Open Purchase data
+// API keys should be stored in environment variables, NOT in source code!
 
 interface APIKey {
   key: string;
@@ -13,36 +14,34 @@ interface APIKey {
   isActive: boolean;
 }
 
-// Mock API keys database (in production, use Supabase)
-const apiKeysDB: Record<string, APIKey> = {
-  'oc_ai_jennifer_abc123': {
-    key: 'oc_ai_jennifer_abc123',
-    name: 'Jennifer (Personal AI)',
-    agentId: 'jennifer',
-    permissions: ['read:all', 'write:orders', 'write:inventory'],
-    createdAt: '2026-02-01',
-    lastUsed: '2026-02-16',
-    isActive: true,
-  },
-  'oc_ai_nicole_xyz789': {
-    key: 'oc_ai_nicole_xyz789',
-    name: 'Nicole (Business AI)',
-    agentId: 'nicole',
-    permissions: ['read:all', 'write:orders', 'write:inventory', 'read:analytics'],
-    createdAt: '2026-02-01',
-    lastUsed: '2026-02-16',
-    isActive: true,
-  },
-  'oc_ai_eugene_main': {
-    key: 'oc_ai_eugene_main',
-    name: 'Eugene (Main Assistant)',
-    agentId: 'main',
-    permissions: ['admin'],
-    createdAt: '2026-02-01',
-    lastUsed: '2026-02-16',
-    isActive: true,
-  },
-};
+// Get API key from environment variable
+// Format: JSON array of API keys
+// Example: [{"key":"oc_ai_xxx","name":"Jennifer","agentId":"jennifer",...}]
+function getAPIKeysFromEnv(): Record<string, APIKey> {
+  const envKeys = process.env.OPENCLAW_API_KEYS;
+  
+  if (!envKeys) {
+    // Return empty - will require Supabase lookup
+    console.warn('⚠️ OPENCLAW_API_KEYS not set. Using empty keys DB.');
+    return {};
+  }
+  
+  try {
+    const keys = JSON.parse(envKeys);
+    const keysDB: Record<string, APIKey> = {};
+    for (const key of keys) {
+      keysDB[key.key] = key;
+    }
+    return keysDB;
+  } catch (e) {
+    console.error('Failed to parse OPENCLAW_API_KEYS:', e);
+    return {};
+  }
+}
+
+// Mock API keys - FOR DEMO ONLY!
+// In production, use: export OPENCLAW_API_KEYS='[{"key":"...","name":"...","agentId":"...","permissions":[...],"createdAt":"...","lastUsed":"...","isActive":true}]'
+// These keys should be stored in Vercel Environment Variables, NOT in source code!
 
 // Validate API Key
 function validateAPIKey(request: NextRequest): { valid: boolean; key?: APIKey; error?: string } {
@@ -53,9 +52,19 @@ function validateAPIKey(request: NextRequest): { valid: boolean; key?: APIKey; e
   }
   
   const apiKey = authHeader.replace('Bearer ', '');
+  
+  // Get keys from environment (secure) or fallback to demo (insecure)
+  const apiKeysDB = getAPIKeysFromEnv();
   const keyData = apiKeysDB[apiKey];
   
   if (!keyData) {
+    // In demo mode without env keys, reject all requests
+    if (Object.keys(apiKeysDB).length === 0) {
+      return { 
+        valid: false, 
+        error: 'API not configured. Set OPENCLAW_API_KEYS environment variable in Vercel.' 
+      };
+    }
     return { valid: false, error: 'Invalid API key' };
   }
   

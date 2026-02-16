@@ -2,21 +2,60 @@
 
 This API enables OpenClaw assistant AIs (Jennifer, Nicole, Eugene) to access Open Purchase data programmatically.
 
+## ⚠️ Security Warning
+
+**API keys must NOT be hardcoded in source code!**
+
+Keys shown in this document are for DEMO ONLY. In production:
+
+1. Store keys in Vercel Environment Variables
+2. Never commit keys to GitHub
+3. Use Supabase for key management in production
+
+## Set API Keys in Vercel
+
+Go to Project Settings → Environment Variables:
+
+```
+Name: OPENCLAW_API_KEYS
+Value: [
+  {
+    "key": "oc_ai_jennifer_xxx",
+    "name": "Jennifer (Personal AI)",
+    "agentId": "jennifer",
+    "permissions": ["read:all", "write:orders", "write:inventory"],
+    "createdAt": "2026-02-01",
+    "lastUsed": "2026-02-16",
+    "isActive": true
+  },
+  {
+    "key": "oc_ai_nicole_xxx",
+    "name": "Nicole (Business AI)",
+    "agentId": "nicole",
+    "permissions": ["read:all", "write:orders", "write:inventory", "read:analytics"],
+    "createdAt": "2026-02-01",
+    "lastUsed": "2026-02-16",
+    "isActive": true
+  },
+  {
+    "key": "oc_ai_eugene_xxx",
+    "name": "Eugene (Main Assistant)",
+    "agentId": "main",
+    "permissions": ["admin"],
+    "createdAt": "2026-02-01",
+    "lastUsed": "2026-02-16",
+    "isActive": true
+  }
+]
+```
+
 ## Authentication
 
 All requests require an API key in the Authorization header:
 
 ```
-Authorization: Bearer oc_ai_eugene_main
+Authorization: Bearer oc_ai_your_key_here
 ```
-
-### Available API Keys
-
-| Key | Agent | Permissions |
-|-----|-------|-------------|
-| `oc_ai_jennifer_abc123` | Jennifer (Personal AI) | read:all, write:orders, write:inventory |
-| `oc_ai_nicole_xyz789` | Nicole (Business AI) | read:all, write:orders, write:inventory, read:analytics |
-| `oc_ai_eugene_main` | Eugene (Main) | admin |
 
 ## Endpoints
 
@@ -26,6 +65,7 @@ Get dashboard overview.
 
 ```
 GET /api/v1?resource=dashboard
+Authorization: Bearer oc_ai_your_key_here
 ```
 
 **Response:**
@@ -33,7 +73,7 @@ GET /api/v1?resource=dashboard
 {
   "success": true,
   "data": {
-    "agent": "Eugene (Main Assistant)",
+    "agent": "Your AI Agent",
     "timestamp": "2026-02-16T12:00:00Z",
     "stats": {
       "totalOrders": 156,
@@ -52,7 +92,7 @@ Get all orders.
 
 ```
 GET /api/v1?resource=orders
-Authorization: Bearer oc_ai_nicole_xyz789
+Authorization: Bearer oc_ai_your_key_here
 ```
 
 ### GET /api/v1?resource=inventory
@@ -61,7 +101,7 @@ Get inventory items.
 
 ```
 GET /api/v1?resource=inventory
-Authorization: Bearer oc_ai_jennifer_abc123
+Authorization: Bearer oc_ai_your_key_here
 ```
 
 ### GET /api/v1?resource=suppliers
@@ -70,6 +110,7 @@ Get suppliers list.
 
 ```
 GET /api/v1?resource=suppliers
+Authorization: Bearer oc_ai_your_key_here
 ```
 
 ### GET /api/v1?resource=analytics
@@ -78,7 +119,7 @@ Get analytics data.
 
 ```
 GET /api/v1?resource=analytics
-Authorization: Bearer oc_ai_nicole_xyz789
+Authorization: Bearer oc_ai_your_key_here
 ```
 
 ## Actions (POST)
@@ -87,7 +128,7 @@ Authorization: Bearer oc_ai_nicole_xyz789
 
 ```json
 POST /api/v1
-Authorization: Bearer oc_ai_nicole_xyz789
+Authorization: Bearer oc_ai_your_key_here
 
 {
   "action": "create_order",
@@ -102,7 +143,7 @@ Authorization: Bearer oc_ai_nicole_xyz789
 
 ```json
 POST /api/v1
-Authorization: Bearer oc_ai_jennifer_abc123
+Authorization: Bearer oc_ai_your_key_here
 
 {
   "action": "update_inventory",
@@ -115,7 +156,7 @@ Authorization: Bearer oc_ai_jennifer_abc123
 
 ```json
 POST /api/v1
-Authorization: Bearer oc_ai_eugene_main
+Authorization: Bearer oc_ai_your_key_here
 
 {
   "action": "send_whatsapp",
@@ -128,7 +169,7 @@ Authorization: Bearer oc_ai_eugene_main
 
 ```json
 POST /api/v1
-Authorization: Bearer oc_ai_nicole_xyz789
+Authorization: Bearer oc_ai_your_key_here
 
 {
   "action": "analyze_cost",
@@ -152,6 +193,15 @@ Authorization: Bearer oc_ai_nicole_xyz789
 
 - 100 requests per minute per API key
 - Burst up to 10 requests
+
+## Production Security Checklist
+
+- [ ] API keys stored in Vercel Environment Variables
+- [ ] Keys NOT in GitHub source code
+- [ ] RLS policies enabled in Supabase
+- [ ] HTTPS enforced (automatic in Vercel)
+- [ ] API keys rotated quarterly
+- [ ] Monitoring enabled for suspicious activity
 
 ## Use Cases
 
