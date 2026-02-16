@@ -61,7 +61,8 @@ export async function POST(request: NextRequest) {
     const order = findOrderByPhone(normalizedPhone)
 
     if (!order) {
-      return twimlResponse(templates.help())
+      const helpMsg = templates.help()
+      return twimlResponse(helpMsg)
     }
 
     // Process action
