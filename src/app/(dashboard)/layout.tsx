@@ -21,15 +21,16 @@ function DashboardLayoutInner({
 }: {
   children: React.ReactNode;
 }) {
+  const { lang } = useLanguage();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-    { icon: ShoppingCart, label: "Orders", href: "/orders" },
-    { icon: Users, label: "Suppliers", href: "/suppliers" },
-    { icon: Package, label: "Inventory", href: "/inventory" },
-    { icon: BarChart3, label: "Analytics", href: "/analytics" },
-    { icon: Settings, label: "Settings", href: "/settings" },
+    { icon: LayoutDashboard, label: "Dashboard", labelZh: "儀表板", href: "/" },
+    { icon: ShoppingCart, label: "Orders", labelZh: "訂單", href: "/orders" },
+    { icon: Users, label: "Suppliers", labelZh: "供應商", href: "/suppliers" },
+    { icon: Package, label: "Inventory", labelZh: "庫存", href: "/inventory" },
+    { icon: BarChart3, label: "Analytics", labelZh: "分析", href: "/analytics" },
+    { icon: Settings, label: "Settings", labelZh: "設定", href: "/settings" },
   ];
 
   return (
@@ -62,7 +63,7 @@ function DashboardLayoutInner({
               className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-colors"
             >
               <item.icon size={20} />
-              {!sidebarCollapsed && <span>{item.label}</span>}
+              {!sidebarCollapsed && <span>{lang === 'zh' ? item.labelZh : item.label}</span>}
             </a>
           ))}
         </nav>
@@ -84,7 +85,7 @@ function DashboardLayoutInner({
               />
               <input
                 type="text"
-                placeholder="Search products, suppliers, orders..."
+                placeholder={lang === 'zh' ? "搜尋商品、供應商、訂單..." : "Search products, suppliers, orders..."}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
               />
             </div>
