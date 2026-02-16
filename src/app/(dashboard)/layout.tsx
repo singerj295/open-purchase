@@ -13,8 +13,10 @@ import {
   Bell,
   Search,
 } from "lucide-react";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-export default function DashboardLayout({
+function DashboardLayoutInner({
   children,
 }: {
   children: React.ReactNode;
@@ -83,11 +85,12 @@ export default function DashboardLayout({
               <input
                 type="text"
                 placeholder="Search products, suppliers, orders..."
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
               />
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             <button className="relative p-2 hover:bg-gray-100 rounded-lg">
               <Bell size={20} />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -102,5 +105,17 @@ export default function DashboardLayout({
         <div className="p-6">{children}</div>
       </main>
     </div>
+  );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <LanguageProvider>
+      <DashboardLayoutInner>{children}</DashboardLayoutInner>
+    </LanguageProvider>
   );
 }

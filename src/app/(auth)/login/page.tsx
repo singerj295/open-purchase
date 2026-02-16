@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,81 +41,92 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-emerald-600">🍽️ Open Purchase</h1>
-          <p className="text-gray-500 mt-2">Sign in to your account</p>
+    <LanguageProvider>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        {/* Language Switcher */}
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
         </div>
+        
+        <div className="max-w-md w-full">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-emerald-600">🍽️ Open Purchase</h1>
+            <p className="text-gray-500 mt-2">Sign in to your account</p>
+          </div>
 
-        {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-sm border p-8">
-          <form onSubmit={handleLogin} className="space-y-6">
-            {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">{error}</p>
+          {/* Login Form */}
+          <div className="bg-white rounded-2xl shadow-sm border p-8">
+            <form onSubmit={handleLogin} className="space-y-6">
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{error}</p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
+                  placeholder="you@example.com"
+                  required
+                />
               </div>
-            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
-                placeholder="you@example.com"
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                {loading ? "Signing in..." : "Sign In"}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <p className="text-gray-500">
+                Don&apos;t have an account?{" "}
+                <Link href="/signup" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                  Sign up
+                </Link>
+              </p>
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-500">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-emerald-600 hover:text-emerald-700 font-medium">
-                Sign up
-              </Link>
+          {/* Demo Credentials */}
+          <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+            <p className="text-sm text-emerald-700 font-medium mb-2">🎉 Demo Mode Available!</p>
+            <p className="text-xs text-emerald-600">
+              Email: <code className="bg-emerald-100 px-1 rounded">demo@example.com</code>
+            </p>
+            <p className="text-xs text-emerald-600 mt-1">
+              Password: <code className="bg-emerald-100 px-1 rounded">demo123456</code>
             </p>
           </div>
         </div>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-          <p className="text-sm text-emerald-700 font-medium mb-2">🎉 Demo Mode Available!</p>
-          <p className="text-xs text-emerald-600">
-            Email: <code className="bg-emerald-100 px-1 rounded">demo@example.com</code>
-          </p>
-          <p className="text-xs text-emerald-600 mt-1">
-            Password: <code className="bg-emerald-100 px-1 rounded">demo123456</code>
-          </p>
-        </div>
       </div>
-    </div>
+    </LanguageProvider>
   );
+}
+
+export default function LoginPage() {
+  return <LoginForm />;
 }
