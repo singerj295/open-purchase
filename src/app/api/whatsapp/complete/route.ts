@@ -26,7 +26,16 @@ interface Order {
 const ordersDB: Map<string, Order> = new Map()
 
 // Message templates
-const templates: Record<string, string | ((...args: any[]) => string)> = {
+interface MessageTemplates {
+  orderReceived: (orderNumber: string, total: number) => string
+  orderConfirmed: (orderNumber: string) => string
+  orderShipped: (orderNumber: string, tracking?: string) => string
+  orderDelivered: (orderNumber: string) => string
+  priceUpdated: (orderNumber: string, newPrice: number) => string
+  help: () => string
+}
+
+const templates: MessageTemplates = {
   orderReceived: (orderNumber: string, total: number) =>
     `📦 Order ${orderNumber} received!\n\nTotal: $${total}\n\nPlease reply:\n- "YES" to confirm\n- "NO" to decline\n- "PRICE: $XX" to update price`,
 
