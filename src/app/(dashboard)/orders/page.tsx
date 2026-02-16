@@ -7,6 +7,7 @@ interface Order {
   id: string;
   orderNumber: string;
   supplier: string;
+  product: string;
   items: number;
   total: number;
   status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
@@ -14,13 +15,13 @@ interface Order {
 }
 
 const mockOrders: Order[] = [
-  { id: "1", orderNumber: "ORD-001", supplier: "Fresh Farm Co", items: 12, total: 450, status: "delivered", date: "2026-02-15" },
-  { id: "2", orderNumber: "ORD-002", supplier: "Ocean Seafood", items: 8, total: 890, status: "shipped", date: "2026-02-15" },
-  { id: "3", orderNumber: "ORD-003", supplier: "Kitchen Supplies Ltd", items: 24, total: 320, status: "pending", date: "2026-02-16" },
-  { id: "4", orderNumber: "ORD-004", supplier: "Fresh Farm Co", items: 15, total: 560, status: "confirmed", date: "2026-02-16" },
-  { id: "5", orderNumber: "ORD-005", supplier: "Spice World", items: 6, total: 180, status: "cancelled", date: "2026-02-14" },
-  { id: "6", orderNumber: "ORD-006", supplier: "Ocean Seafood", items: 10, total: 720, status: "pending", date: "2026-02-16" },
-  { id: "7", orderNumber: "ORD-007", supplier: "Fresh Farm Co", items: 20, total: 380, status: "delivered", date: "2026-02-13" },
+  { id: "1", orderNumber: "ORD-001", supplier: "Fresh Farm Co", product: "Tomatoes", items: 12, total: 450, status: "delivered", date: "2026-02-15" },
+  { id: "2", orderNumber: "ORD-002", supplier: "Ocean Seafood", product: "Salmon", items: 8, total: 890, status: "shipped", date: "2026-02-15" },
+  { id: "3", orderNumber: "ORD-003", supplier: "Kitchen Supplies Ltd", product: "Olive Oil", items: 24, total: 320, status: "pending", date: "2026-02-16" },
+  { id: "4", orderNumber: "ORD-004", supplier: "Fresh Farm Co", product: "Chicken Breast", items: 15, total: 560, status: "confirmed", date: "2026-02-16" },
+  { id: "5", orderNumber: "ORD-005", supplier: "Spice World", product: "Mixed Herbs", items: 6, total: 180, status: "cancelled", date: "2026-02-14" },
+  { id: "6", orderNumber: "ORD-006", supplier: "Ocean Seafood", product: "Sea Bass", items: 10, total: 720, status: "pending", date: "2026-02-16" },
+  { id: "7", orderNumber: "ORD-007", supplier: "Fresh Farm Co", product: "Fresh Basil", items: 20, total: 380, status: "delivered", date: "2026-02-13" },
 ];
 
 const suppliers = ["Fresh Farm Co", "Ocean Seafood", "Kitchen Supplies Ltd", "Spice World"];
@@ -49,14 +50,18 @@ export default function OrdersPage() {
   const [showModal, setShowModal] = useState(false);
   const [newOrder, setNewOrder] = useState({
     supplier: "",
+    product: "",
     items: "",
     total: "",
   });
 
+  const suppliers = ["Fresh Farm Co", "Ocean Seafood", "Kitchen Supplies Ltd", "Spice World"];
+  const products = ["Tomatoes", "Salmon", "Olive Oil", "Chicken Breast", "Pasta", "Fresh Basil", "Mixed Herbs", "Sea Bass"];
+
   const isZh = lang === "zh";
 
   const handleAddOrder = () => {
-    if (newOrder.supplier && newOrder.items && newOrder.total) {
+    if (newOrder.supplier && newOrder.product && newOrder.items && newOrder.total) {
       const order: Order = {
         id: String(orders.length + 1),
         orderNumber: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
@@ -68,7 +73,7 @@ export default function OrdersPage() {
       };
       setOrders([order, ...orders]);
       setShowModal(false);
-      setNewOrder({ supplier: "", items: "", total: "" });
+      setNewOrder({ supplier: "", product: "", items: "", total: "" });
     }
   };
 
@@ -159,11 +164,11 @@ export default function OrdersPage() {
           <thead>
             <tr>
               <th>{isZh ? "訂單編號" : "Order #"}</th>
+              <th>{isZh ? "產品" : "Product"}</th>
               <th>{isZh ? "供應商" : "Supplier"}</th>
-              <th>{isZh ? "項目" : "Items"}</th>
+              <th>{isZh ? "數量" : "Qty"}</th>
               <th>{isZh ? "總額" : "Total"}</th>
               <th>{isZh ? "狀態" : "Status"}</th>
-              <th>{isZh ? "日期" : "Date"}</th>
               <th></th>
             </tr>
           </thead>
@@ -171,6 +176,7 @@ export default function OrdersPage() {
             {filteredOrders.map((order) => (
               <tr key={order.id}>
                 <td style={{ fontWeight: '600', color: 'var(--primary)' }}>{order.orderNumber}</td>
+                <td>{order.product}</td>
                 <td>{order.supplier}</td>
                 <td>{order.items}</td>
                 <td style={{ fontWeight: '500' }}>${order.total}</td>
@@ -179,7 +185,6 @@ export default function OrdersPage() {
                     {isZh ? statusLabels[order.status].zh : statusLabels[order.status].en}
                   </span>
                 </td>
-                <td style={{ color: 'var(--muted)' }}>{order.date}</td>
                 <td>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
@@ -241,6 +246,21 @@ export default function OrdersPage() {
               
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "產品" : "Product"}
+                </label>
+                <select
+                  value={newOrder.product}
+                  onChange={(e) => setNewOrder({ ...newOrder, product: e.target.value })}
+                  className="input"
+                  style={{ width: '100%' }}
+                >
+                  <option value="">{isZh ? "選擇產品" : "Select product"}</option>
+                  {products.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
                   {isZh ? "項目數量" : "Number of Items"}
                 </label>
                 <input
@@ -279,7 +299,7 @@ export default function OrdersPage() {
                   onClick={handleAddOrder}
                   className="btn-primary"
                   style={{ flex: 1 }}
-                  disabled={!newOrder.supplier || !newOrder.items || !newOrder.total}
+                  disabled={!newOrder.supplier || !newOrder.product || !newOrder.items || !newOrder.total}
                 >
                   {isZh ? "創建訂單" : "Create Order"}
                 </button>
