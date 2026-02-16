@@ -13,49 +13,42 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const defaultUser: User = {
-  id: "1",
-  name: "Restaurant Owner",
-  email: "demo@restaurant.com",
-  restaurantName: "My Restaurant",
-  restaurantAddress: "123 Food Street, Hong Kong",
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
     // Check for existing session
     const savedUser = localStorage.getItem('open-purchase-user');
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
       } catch (e) {
-        // No valid session, user needs to login
-        setUser(null);
+        localStorage.removeItem('open-purchase-user');
       }
-    } else {
-      // No saved user, stay logged out
-      setUser(null);
     }
     setIsLoading(false);
-  }, []);
+  }, [mounted]);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
-    // Simulate login
-    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Demo login
-    if (email === "demo@restaurant.com" || password === "demo") {
+    // Demo mode
+    if (email === "demo@restaurant.com" && password === "demo") {
       const user: User = {
         id: "1",
         name: "Restaurant Owner",
@@ -63,15 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         restaurantName: "My Restaurant",
         restaurantAddress: "123 Food Street, Hong Kong",
       };
-      
       setUser(user);
       localStorage.setItem('open-purchase-user', JSON.stringify(user));
       setIsLoading(false);
-      return true;
+      return;
     }
     
     setIsLoading(false);
-    return false;
   };
 
   const logout = () => {

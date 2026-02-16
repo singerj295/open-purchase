@@ -17,6 +17,23 @@ function LoginForm() {
     setLoading(true);
     setError("");
 
+    // Demo mode - direct login without API
+    if (email === "demo@restaurant.com" && password === "demo") {
+      const user = {
+        id: "1",
+        name: "Restaurant Owner",
+        email: email,
+        restaurantName: "My Restaurant",
+        restaurantAddress: "123 Food Street, Hong Kong",
+      };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('open-purchase-user', JSON.stringify(user));
+      }
+      router.push("/");
+      return;
+    }
+
+    // Real API login
     try {
       const response = await fetch("/api/auth", {
         method: "POST",
@@ -25,14 +42,27 @@ function LoginForm() {
       });
 
       const data = await response.json();
+      console.log("Auth response:", data);
 
       if (!data.success) {
         throw new Error(data.error || "登入失敗");
       }
 
+      // Save user to localStorage
+      const user = {
+        id: data.data?.user?.id || "1",
+        name: data.data?.user?.name || email.split('@')[0],
+        email: email,
+        restaurantName: "My Restaurant",
+        restaurantAddress: "123 Food Street, Hong Kong",
+      };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('open-purchase-user', JSON.stringify(user));
+      }
+
       router.push("/");
-      router.refresh();
     } catch (err: any) {
+      console.error("Login error:", err);
       setError(err.message || "登入失敗");
     } finally {
       setLoading(false);
