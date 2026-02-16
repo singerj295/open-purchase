@@ -1,73 +1,112 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { en, zh, Lang } from './translations';
+import { useState, useEffect, useCallback } from "react";
+import { Sun, Moon, Globe } from "lucide-react";
 
-type Translations = typeof en;
+type Lang = "en" | "zh";
 
-interface ThemeContextType {
+interface ThemeState {
   dark: boolean;
-  toggleDark: () => void;
   lang: Lang;
+  toggleDark: () => void;
   setLang: (lang: Lang) => void;
-  t: Translations;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+function createThemeContext(defaultDark: boolean, defaultLang: Lang) {
+  const ThemeContext = require("react").createContext<ThemeState | undefined>(undefined);
+  
+  function ThemeProvider({ children }: { children: React.ReactNode }) {
+    const [dark, setDark] = useState(defaultDark);
+    const [lang, setLangState] = useState(defaultLang);
+    const [mounted, setMounted] = useState(false);
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [dark, setDark] = useState(false);
-  const [lang, setLang] = useState<Lang>('zh');
+    useEffect(() => {
+      setMounted(true);
+    }, []);
 
-  // Load saved preferences
-  useEffect(() => {
-    const savedDark = localStorage.getItem('open-purchase-dark');
-    const savedLang = localStorage.getItem('open-purchase-lang') as Lang;
+    useEffect(() => {
+      const savedDark = localStorage.getItem("open-purchase-dark");
+      const savedLang = localStorage.getItem("open-purchase-lang") as Lang;
+      
+      if (savedDark === "true") {
+        setDark(true);
+        document.documentElement.classList.add("dark");
+      } else if (savedDark === "false") {
+        setDark(false);
+        document.documentElement.classList.remove("dark");
+      }
+      
+      if (savedLang === "en" || savedLang === "zh") {
+        setLangState(savedLang);
+      }
+    }, []);
 
-    if (savedDark === 'true') {
-      setDark(true);
-      document.documentElement.classList.add('dark');
+    const toggleDark = useCallback(() => {
+      setDark((prev) => {
+        const newDark = !prev;
+        if (newDark) {
+          document.documentElement.classList.add("dark");
+          localStorage.setItem("open-purchase-dark", "true");
+        } else {
+          document.documentElement.classList.remove("dark");
+          localStorage.setItem("open-purchase-dark", "false");
+        }
+        return newDark;
+      });
+    }, []);
+
+    const setLang = useCallback((newLang: Lang) => {
+      setLangState(newLang);
+      localStorage.setItem("open-purchase-lang", newLang);
+    }, []);
+
+    // Prevent flash of wrong theme
+    if (!mounted) {
+      return (
+        <ThemeContext.Provider value={{ dark: defaultDark, lang: defaultLang, toggleDark: () => {}, setLang: () => {} }}>
+          {children}
+        </ThemeContext.Provider>
+      );
     }
 
-    if (savedLang && (savedLang === 'en' || savedLang === 'zh')) {
-      setLang(savedLang);
-    } else {
-      const browserLang = navigator.language.split('-')[0];
-      setLang(browserLang === 'zh' ? 'zh' : 'en');
-    }
-  }, []);
-
-  // Toggle dark mode
-  const toggleDark = () => {
-    setDark(!dark);
-    if (!dark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('open-purchase-dark', 'true');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('open-purchase-dark', 'false');
-    }
-  };
-
-  // Set language
-  const handleSetLang = (newLang: Lang) => {
-    setLang(newLang);
-    localStorage.setItem('open-purchase-lang', newLang);
-  };
-
-  const t = lang === 'zh' ? zh : en;
-
-  return (
-    <ThemeContext.Provider value={{ dark, toggleDark, lang, setLang: handleSetLang, t }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    return (
+      <ThemeContext.Provider value={{ dark, lang, toggleDark, setLang }}>
+        {children}
+      </ThemeContext.Provider>
+    );
   }
-  return context;
+
+  function useTheme() {
+    const context = require("react").useContext(ThemeContext);
+    if (context === undefined) {
+      throw new Error("useTheme must be used within a ThemeProvider");
+    }
+    return context;
+  }
+
+  return { ThemeProvider, useTheme, ThemeContext };
 }
+
+const { ThemeProvider, useTheme } = createThemeContext(false, "zh");
+
+export { ThemeProvider, useTheme };
+
+// Export translations for use in components
+export const translations = {
+  en: {
+    darkMode: "Dark Mode",
+    lightMode: "Light Mode",
+    language: "Language",
+    chinese: "中文",
+    english: "English",
+  },
+  zh: {
+    darkMode: "深色模式",
+    lightMode: "淺色模式",
+    language: "語言",
+    chinese: "中文",
+    english: "English",
+  },
+};
+
+export type { Lang };

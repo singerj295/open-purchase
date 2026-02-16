@@ -1,36 +1,53 @@
 "use client";
 
-import { useTheme } from '@/lib/i18n/ThemeContext';
-import { Sun, Moon, Globe } from 'lucide-react';
+import { useTheme, translations } from "@/lib/i18n/ThemeContext";
+import { Sun, Moon, Globe } from "lucide-react";
 
-export default function LanguageSwitcher() {
-  const { lang, setLang, dark, toggleDark } = useTheme();
+export default function ThemeSwitcher() {
+  const { dark, toggleDark, lang, setLang } = useTheme();
+  const t = translations[lang];
 
   return (
-    <div className="flex items-center gap-2">
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
       {/* Dark Mode Toggle */}
       <button
         onClick={toggleDark}
-        className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-        title={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        style={{
+          padding: "8px",
+          borderRadius: "8px",
+          border: "none",
+          background: dark ? "#374151" : "#f3f4f6",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        title={dark ? t.lightMode : t.darkMode}
       >
         {dark ? (
-          <Sun size={18} className="text-yellow-500" />
+          <Sun size={18} color="#fbbf24" />
         ) : (
-          <Moon size={18} className="text-gray-600" />
+          <Moon size={18} color="#6b7280" />
         )}
       </button>
 
       {/* Language Toggle */}
-      <div className="flex items-center gap-1">
-        <Globe size={16} className="text-gray-500" />
+      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+        <Globe size={16} color="#9ca3af" />
         <select
           value={lang}
-          onChange={(e) => setLang(e.target.value as 'en' | 'zh')}
-          className="bg-transparent text-sm text-gray-700 dark:text-gray-300 border-none cursor-pointer focus:outline-none"
+          onChange={(e) => setLang(e.target.value as "en" | "zh")}
+          style={{
+            background: "transparent",
+            border: "none",
+            fontSize: "14px",
+            color: dark ? "#d1d5db" : "#374151",
+            cursor: "pointer",
+            outline: "none",
+          }}
         >
-          <option value="en">EN</option>
-          <option value="zh">中文</option>
+          <option value="zh" style={{ color: "#374151" }}>中文</option>
+          <option value="en" style={{ color: "#374151" }}>EN</option>
         </select>
       </div>
     </div>
