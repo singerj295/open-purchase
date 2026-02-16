@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function SignupPage() {
   const router = useRouter();
@@ -24,19 +18,18 @@ export default function SignupPage() {
     setError("");
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-        },
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "signup", email, password, name }),
       });
 
-      if (error) throw error;
-      
-      // Check if email confirmation is required
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || "Signup failed");
+      }
+
       router.push("/login?message=check-email");
       router.refresh();
     } catch (err: any) {
