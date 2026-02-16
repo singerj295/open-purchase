@@ -122,6 +122,3 @@ export default function DashboardLayout({
     </LanguageProvider>
   );
 }
-
-// Add Recipes to navigation
-import { useLanguage } from "@/lib/i18n/LanguageContext";
