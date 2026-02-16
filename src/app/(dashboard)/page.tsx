@@ -88,13 +88,6 @@ const recentOrders = [
   { id: "ORD-005", supplier: "Spice World", items: 6, total: "$180", status: "delivered" },
 ];
 
-const statusLabels: Record<string, { en: string; zh: string }> = {
-  delivered: { en: "Delivered", zh: "已送達" },
-  shipping: { en: "Shipped", zh: "已發貨" },
-  pending: { en: "Pending", zh: "待處理" },
-  confirmed: { en: "Confirmed", zh: "已確認" },
-};
-
 const statusColors: Record<string, { bg: string; text: string }> = {
   delivered: { bg: "rgba(16, 185, 129, 0.15)", text: "#059669" },
   shipping: { bg: "rgba(59, 130, 246, 0.15)", text: "#2563eb" },
@@ -102,48 +95,97 @@ const statusColors: Record<string, { bg: string; text: string }> = {
   confirmed: { bg: "rgba(139, 92, 246, 0.15)", text: "#7c3aed" },
 };
 
+const statusLabels: Record<string, { en: string; zh: string }> = {
+  delivered: { en: "Delivered", zh: "已送達" },
+  shipping: { en: "Shipped", zh: "已發貨" },
+  pending: { en: "Pending", zh: "待處理" },
+  confirmed: { en: "Confirmed", zh: "已確認" },
+};
+
 export default function DashboardPage() {
-  const [lang, setLang] = useState<"en" | "zh">("zh");
+  const [lang, setLang] = useState("zh");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const savedLang = localStorage.getItem("open-purchase-lang");
-    if (savedLang === "en" || savedLang === "zh") {
-      setLang(savedLang);
+    const saved = localStorage.getItem("open-purchase-lang");
+    if (saved === "en" || saved === "zh") {
+      setLang(saved);
     }
   }, []);
 
+  const isZh = lang === "zh";
+
+  const containerStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
+  };
+
+  const headerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: '24px',
+    fontWeight: '600',
+    margin: 0,
+  };
+
+  const subtitleStyle: React.CSSProperties = {
+    color: 'var(--muted)',
+    marginTop: '4px',
+  };
+
+  const gridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: '20px',
+  };
+
+  const chartGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+    gap: '20px',
+  };
+
   if (!mounted) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={containerStyle}>
+        <div style={headerStyle}>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>Dashboard</h1>
-            <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>Welcome back</p>
+            <h1 style={titleStyle}>Dashboard</h1>
+            <p style={subtitleStyle}>Welcome back</p>
           </div>
         </div>
       </div>
     );
   }
 
-  const isZh = lang === "zh";
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={containerStyle}>
       {/* Welcome */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={headerStyle}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
-            {isZh ? "儀表板" : "Dashboard"}
-          </h1>
-          <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>
-            {isZh ? "歡迎回來" : "Welcome back"}
-          </p>
+          <h1 style={titleStyle}>{isZh ? "儀表板" : "Dashboard"}</h1>
+          <p style={subtitleStyle}>{isZh ? "歡迎回來" : "Welcome back"}</p>
         </div>
         <button
-          className="btn-primary"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            background: 'var(--primary)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+          }}
         >
           <Plus size={18} />
           {isZh ? "新增訂單" : "New Order"}
@@ -151,38 +193,26 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '20px',
-        }}
-      >
+      <div style={gridStyle}>
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="stat-card"
-            style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}
+            style={{
+              background: 'var(--card-bg)',
+              borderRadius: '16px',
+              padding: '24px',
+              boxShadow: '0 2px 8px var(--shadow)',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+            }}
           >
             <div>
-              <p
-                style={{
-                  color: 'var(--muted)',
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  margin: 0,
-                }}
-              >
+              <p style={{ color: 'var(--muted)', fontSize: '13px', fontWeight: '500', margin: 0 }}>
                 {isZh ? stat.labelZh : stat.label}
               </p>
-              <p
-                style={{
-                  fontSize: '28px',
-                  fontWeight: '600',
-                  margin: '8px 0',
-                  color: 'var(--foreground)',
-                }}
-              >
+              <p style={{ fontSize: '28px', fontWeight: '600', margin: '8px 0', color: 'var(--foreground)' }}>
                 {stat.value}
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -191,23 +221,12 @@ export default function DashboardPage() {
                 ) : (
                   <ArrowDownRight size={16} color="#ef4444" />
                 )}
-                <span
-                  style={{
-                    fontSize: '13px',
-                    color: stat.trend === 'up' ? '#10b981' : '#ef4444',
-                  }}
-                >
+                <span style={{ fontSize: '13px', color: stat.trend === 'up' ? '#10b981' : '#ef4444' }}>
                   {stat.change}
                 </span>
               </div>
             </div>
-            <div
-              style={{
-                padding: '12px',
-                borderRadius: '12px',
-                background: `${stat.color}15`,
-              }}
-            >
+            <div style={{ padding: '12px', borderRadius: '12px', background: `${stat.color}15` }}>
               <stat.icon size={24} color={stat.color} />
             </div>
           </div>
@@ -215,168 +234,90 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Row */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: '20px',
-        }}
-      >
+      <div style={chartGridStyle}>
         {/* Orders Chart */}
-        <div className="card" style={{ padding: '24px' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px var(--shadow)', border: 'none' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
             {isZh ? '每週訂單' : 'Weekly Orders'}
           </h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={orderData}>
-              <XAxis
-                dataKey="name"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'var(--muted)', fontSize: 12 }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'var(--muted)', fontSize: 12 }}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: 'var(--card-bg)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px var(--shadow)',
-                }}
-              />
-              <Bar
-                dataKey="orders"
-                fill="var(--primary)"
-                radius={[8, 8, 0, 0]}
-              />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--muted)', fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--muted)', fontSize: 12 }} />
+              <Tooltip contentStyle={{ background: 'var(--card-bg)', border: 'none', borderRadius: '8px', boxShadow: '0 4px 12px var(--shadow)' }} />
+              <Bar dataKey="orders" fill="var(--primary)" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Spend Chart */}
-        <div className="card" style={{ padding: '24px' }}>
+        <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px var(--shadow)', border: 'none' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
             {isZh ? '月度支出' : 'Monthly Spend'}
           </h3>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={spendData}>
-              <XAxis
-                dataKey="name"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'var(--muted)', fontSize: 12 }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'var(--muted)', fontSize: 12 }}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: 'var(--card-bg)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px var(--shadow)',
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="spend"
-                stroke="var(--primary)"
-                strokeWidth={2}
-                dot={{ fill: 'var(--primary)', strokeWidth: 2 }}
-              />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--muted)', fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--muted)', fontSize: 12 }} />
+              <Tooltip contentStyle={{ background: 'var(--card-bg)', border: 'none', borderRadius: '8px', boxShadow: '0 4px 12px var(--shadow)' }} />
+              <Line type="monotone" dataKey="spend" stroke="var(--primary)" strokeWidth={2} dot={{ fill: 'var(--primary)', strokeWidth: 2 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Recent Orders */}
-      <div className="card" style={{ padding: '24px' }}>
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px var(--shadow)', border: 'none' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', margin: 0 }}>
             {isZh ? '最近訂單' : 'Recent Orders'}
           </h3>
-          <a
-            href="/orders"
-            style={{
-              fontSize: '14px',
-              color: 'var(--primary)',
-              fontWeight: '500',
-            }}
-          >
+          <a href="/orders" style={{ fontSize: '14px', color: 'var(--primary)', fontWeight: '500', textDecoration: 'none' }}>
             {isZh ? '查看全部' : 'View All'} →
           </a>
         </div>
-        <table>
+        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
           <thead>
             <tr>
-              <th>{isZh ? '訂單編號' : 'Order ID'}</th>
-              <th>{isZh ? '供應商' : 'Supplier'}</th>
-              <th>{isZh ? '項目' : 'Items'}</th>
-              <th>{isZh ? '總額' : 'Total'}</th>
-              <th>{isZh ? '狀態' : 'Status'}</th>
-              <th></th>
+              <th style={{ textAlign: 'left', padding: '16px', fontWeight: '600', color: 'var(--muted)', fontSize: '12px', textTransform: 'uppercase' }}>
+                {isZh ? '訂單編號' : 'Order ID'}
+              </th>
+              <th style={{ textAlign: 'left', padding: '16px', fontWeight: '600', color: 'var(--muted)', fontSize: '12px', textTransform: 'uppercase' }}>
+                {isZh ? '供應商' : 'Supplier'}
+              </th>
+              <th style={{ textAlign: 'left', padding: '16px', fontWeight: '600', color: 'var(--muted)', fontSize: '12px', textTransform: 'uppercase' }}>
+                {isZh ? '項目' : 'Items'}
+              </th>
+              <th style={{ textAlign: 'left', padding: '16px', fontWeight: '600', color: 'var(--muted)', fontSize: '12px', textTransform: 'uppercase' }}>
+                {isZh ? '總額' : 'Total'}
+              </th>
+              <th style={{ textAlign: 'left', padding: '16px', fontWeight: '600', color: 'var(--muted)', fontSize: '12px', textTransform: 'uppercase' }}>
+                {isZh ? '狀態' : 'Status'}
+              </th>
+              <th style={{ width: '100px' }}></th>
             </tr>
           </thead>
           <tbody>
             {recentOrders.map((order) => (
-              <tr key={order.id}>
-                <td style={{ fontWeight: '500' }}>{order.id}</td>
-                <td style={{ color: 'var(--muted)' }}>{order.supplier}</td>
-                <td>{order.items}</td>
-                <td style={{ fontWeight: '500' }}>{order.total}</td>
-                <td>
-                  <span
-                    className="badge"
-                    style={{
-                      background: statusColors[order.status].bg,
-                      color: statusColors[order.status].text,
-                    }}
-                  >
-                    {isZh
-                      ? statusLabels[order.status].zh
-                      : statusLabels[order.status].en}
+              <tr key={order.id} style={{ borderBottom: '1px solid rgba(128,128,128,0.1)' }}>
+                <td style={{ padding: '16px', fontWeight: '500', color: 'var(--primary)' }}>{order.id}</td>
+                <td style={{ padding: '16px', color: 'var(--muted)' }}>{order.supplier}</td>
+                <td style={{ padding: '16px' }}>{order.items}</td>
+                <td style={{ padding: '16px', fontWeight: '500' }}>{order.total}</td>
+                <td style={{ padding: '16px' }}>
+                  <span style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '500', background: statusColors[order.status].bg, color: statusColors[order.status].text }}>
+                    {isZh ? statusLabels[order.status].zh : statusLabels[order.status].en}
                   </span>
                 </td>
-                <td>
+                <td style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      style={{
-                        padding: '6px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                      }}
-                    >
+                    <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
                       <Eye size={16} />
                     </button>
-                    <button
-                      style={{
-                        padding: '6px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                      }}
-                    >
+                    <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
                       <Edit size={16} />
                     </button>
-                    <button
-                      style={{
-                        padding: '6px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        color: '#ef4444',
-                      }}
-                    >
+                    <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444' }}>
                       <Trash2 size={16} />
                     </button>
                   </div>
