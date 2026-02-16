@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Download, FileText, Calendar, DollarSign, ShoppingCart, Package } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useTheme } from "@/lib/i18n/ThemeContext";
 
 interface Report {
   id: string;
@@ -20,7 +20,7 @@ const mockReports: Report[] = [
 ];
 
 export default function ReportsPage() {
-  const { lang, t } = useLanguage();
+  const { lang, t } = useTheme();
   const [selectedType, setSelectedType] = useState("all");
   const [dateRange, setDateRange] = useState("month");
 

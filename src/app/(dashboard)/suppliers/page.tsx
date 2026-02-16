@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useTheme } from "@/lib/i18n/ThemeContext";
 
 interface Supplier {
   id: string;
@@ -22,7 +22,7 @@ const mockSuppliers: Supplier[] = [
 ];
 
 export default function SuppliersPage() {
-  const { lang, t } = useLanguage();
+  const { lang, t } = useTheme();
   const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);

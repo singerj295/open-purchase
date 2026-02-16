@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Search, AlertTriangle, CheckCircle, TrendingUp, Calendar, Download } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useTheme } from "@/lib/i18n/ThemeContext";
 
 interface InventoryItem {
   id: string;
@@ -27,7 +27,7 @@ const mockInventory: InventoryItem[] = [
 ];
 
 export default function InventoryPage() {
-  const { lang, t } = useLanguage();
+  const { lang, t } = useTheme();
   const [inventory] = useState<InventoryItem[]>(mockInventory);
   const [search, setSearch] = useState("");
   const [expiryFilter, setExpiryFilter] = useState("all");

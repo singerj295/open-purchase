@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Settings, Bell, Bot, Database, Globe, Save } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useTheme } from "@/lib/i18n/ThemeContext";
 
 export default function SettingsPage() {
-  const { lang, t } = useLanguage();
+  const { lang, t } = useTheme();
   const [settings, setSettings] = useState({
     companyName: "My Restaurant",
     currency: "HKD",

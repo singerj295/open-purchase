@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Search, Edit, Trash2, DollarSign, Calculator } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useTheme } from "@/lib/i18n/ThemeContext";
 
 interface Ingredient {
   name: string;
@@ -84,7 +84,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function RecipesPage() {
-  const { lang, t } = useLanguage();
+  const { lang, t } = useTheme();
   const [recipes, setRecipes] = useState<Recipe[]>(mockRecipes);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Search, Filter, Eye, Edit, Trash2 } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useTheme } from "@/lib/i18n/ThemeContext";
 
 interface Order {
   id: string;
@@ -41,7 +41,7 @@ const statusLabels: Record<string, { en: string; zh: string }> = {
 };
 
 export default function OrdersPage() {
-  const { lang, t } = useLanguage();
+  const { lang, t } = useTheme();
   const [orders] = useState<Order[]>(mockOrders);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

@@ -2,7 +2,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { ArrowUpRight, ArrowDownRight, Package, ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useTheme } from "@/lib/i18n/LanguageContext";
 
 const stats = [
   {
@@ -80,7 +80,7 @@ const statusLabels: Record<string, { en: string; zh: string }> = {
 };
 
 export default function DashboardPage() {
-  const { lang, t } = useLanguage();
+  const { lang, t } = useTheme();
 
   return (
     <div className="space-y-6">
