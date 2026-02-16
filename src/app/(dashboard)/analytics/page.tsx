@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -50,11 +50,40 @@ const weeklyOrders = [
   { day: "Sun", orders: 5 },
 ];
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  restaurantName: string;
+  restaurantAddress: string;
+}
+
 export default function AnalyticsPage() {
   const [lang, setLang] = useState<"en" | "zh">("zh");
-  const isZh = lang === "zh";
+  const [user, setUser] = useState<User | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  const metrics = [
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("open-purchase-lang");
+    if (saved === "en" || saved === "zh") {
+      setLang(saved);
+    }
+    
+    const savedUser = localStorage.getItem('open-purchase-user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        setUser(null);
+      }
+    }
+  }, []);
+
+  const isZh = lang === "zh";
+  const isBlankUser = user?.email === "eldon@chta.one" || user?.name === "";
+
+  const metrics = isBlankUser ? [] : [
     {
       label: isZh ? "總支出" : "Total Spend",
       value: "$42,650",
@@ -89,6 +118,16 @@ export default function AnalyticsPage() {
     },
   ];
 
+  if (!mounted) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div>
+          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>{isZh ? "數據分析" : "Analytics"}</h1>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
@@ -101,156 +140,194 @@ export default function AnalyticsPage() {
         </p>
       </div>
 
-      {/* Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-        {metrics.map((metric, index) => (
-          <div key={index} className="stat-card">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{metric.label}</p>
-                <p style={{ fontSize: '28px', fontWeight: '600', margin: '8px 0 0 0' }}>{metric.value}</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-                  {metric.trend === 'up' ? (
-                    <TrendingUp size={16} color="#10b981" />
-                  ) : (
-                    <TrendingDown size={16} color="#ef4444" />
-                  )}
-                  <span style={{ 
-                    fontSize: '13px', 
-                    color: metric.trend === 'up' ? '#10b981' : '#ef4444' 
-                  }}>
-                    {metric.change}
-                  </span>
+      {/* Empty State for blank users */}
+      {isBlankUser ? (
+        <div style={{ 
+          background: 'var(--card-bg)', 
+          borderRadius: '16px', 
+          padding: '60px', 
+          boxShadow: '0 2px 8px var(--shadow)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
+            {isZh ? "還沒有數據" : "No Data Yet"}
+          </h2>
+          <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
+            {isZh ? "建立訂單後就會顯示分析數據" : "Analytics will appear after you create orders"}
+          </p>
+          <a 
+            href="/orders"
+            style={{
+              display: 'inline-flex',
+              padding: '12px 24px',
+              background: 'var(--primary)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              textDecoration: 'none',
+            }}
+          >
+            {isZh ? "建立訂單" : "Create Order"}
+          </a>
+        </div>
+      ) : (
+        <>
+          {/* Metrics */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+            {metrics.map((metric, index) => (
+              <div key={index} className="stat-card">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{metric.label}</p>
+                    <p style={{ fontSize: '28px', fontWeight: '600', margin: '8px 0 0 0' }}>{metric.value}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                      {metric.trend === 'up' ? (
+                        <TrendingUp size={16} color="#10b981" />
+                      ) : (
+                        <TrendingDown size={16} color="#ef4444" />
+                      )}
+                      <span style={{ 
+                        fontSize: '13px', 
+                        color: metric.trend === 'up' ? '#10b981' : '#ef4444' 
+                      }}>
+                        {metric.change}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ padding: '12px', borderRadius: '12px', background: `${metric.color}15` }}>
+                    <metric.icon size={24} color={metric.color} />
+                  </div>
                 </div>
               </div>
-              <div style={{ padding: '12px', borderRadius: '12px', background: `${metric.color}15` }}>
-                <metric.icon size={24} color={metric.color} />
+            ))}
+          </div>
+
+          {/* Charts */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
+            {/* Monthly Spend */}
+            <div className="card" style={{ padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
+                {isZh ? "月度支出趨勢" : "Monthly Spend Trend"}
+              </h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={monthlySpend}>
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false} 
+                    tickLine={false}
+                    tick={{ fill: 'var(--muted)', fontSize: 12 }}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false}
+                    tick={{ fill: 'var(--muted)', fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'var(--card-bg)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px var(--shadow)',
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="spend" 
+                    stroke="var(--primary)" 
+                    strokeWidth={3}
+                    dot={{ fill: 'var(--primary)', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Category Breakdown */}
+            <div className="card" style={{ padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
+                {isZh ? "支出分類" : "Spend by Category"}
+              </h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      background: 'var(--card-bg)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px var(--shadow)',
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
+                {categoryData.map((item) => (
+                  <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: item.color }} />
+                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{item.name}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
-        {/* Monthly Spend */}
-        <div className="card" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
-            {isZh ? "月度支出趨勢" : "Monthly Spend Trend"}
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={monthlySpend}>
-              <XAxis 
-                dataKey="month" 
-                axisLine={false} 
-                tickLine={false}
-                tick={{ fill: 'var(--muted)', fontSize: 12 }}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false}
-                tick={{ fill: 'var(--muted)', fontSize: 12 }}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: 'var(--card-bg)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px var(--shadow)',
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="spend" 
-                stroke="var(--primary)" 
-                strokeWidth={3}
-                dot={{ fill: 'var(--primary)', strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Category Breakdown */}
-        <div className="card" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
-            {isZh ? "支出分類" : "Spend by Category"}
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={categoryData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+          {/* Supplier Performance Table */}
+          <div className="card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
+              {isZh ? "供應商表現" : "Supplier Performance"}
+            </h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>{isZh ? "供應商" : "Supplier"}</th>
+                  <th>{isZh ? "訂單數" : "Orders"}</th>
+                  <th>{isZh ? "評分" : "Rating"}</th>
+                  <th>{isZh ? "支出" : "Spend"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {supplierPerformance.map((supplier) => (
+                  <tr key={supplier.name}>
+                    <td style={{ fontWeight: '500' }}>{supplier.name}</td>
+                    <td>{supplier.orders}</td>
+                    <td>
+                      <span style={{ 
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        background: 'rgba(16, 185, 129, 0.15)',
+                        color: '#059669',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                      }}>
+                        {supplier.rating} ★
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: '500' }}>${supplier.spend.toLocaleString()}</td>
+                  </tr>
                 ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  background: 'var(--card-bg)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px var(--shadow)',
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
-            {categoryData.map((item) => (
-              <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: item.color }} />
-                <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{item.name}</span>
-              </div>
-            ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      </div>
-
-      {/* Supplier Performance Table */}
-      <div className="card" style={{ padding: '24px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
-          {isZh ? "供應商表現" : "Supplier Performance"}
-        </h3>
-        <table>
-          <thead>
-            <tr>
-              <th>{isZh ? "供應商" : "Supplier"}</th>
-              <th>{isZh ? "訂單數" : "Orders"}</th>
-              <th>{isZh ? "評分" : "Rating"}</th>
-              <th>{isZh ? "支出" : "Spend"}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {supplierPerformance.map((supplier) => (
-              <tr key={supplier.name}>
-                <td style={{ fontWeight: '500' }}>{supplier.name}</td>
-                <td>{supplier.orders}</td>
-                <td>
-                  <span style={{ 
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '4px 10px',
-                    borderRadius: '20px',
-                    background: 'rgba(16, 185, 129, 0.15)',
-                    color: '#059669',
-                    fontSize: '13px',
-                    fontWeight: '500',
-                  }}>
-                    {supplier.rating} ★
-                  </span>
-                </td>
-                <td style={{ fontWeight: '500' }}>${supplier.spend.toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        </>
+      )}
     </div>
   );
 }

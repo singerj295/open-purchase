@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin, X, Truck, Box } from "lucide-react";
 
 interface Supplier {
@@ -26,6 +26,14 @@ const mockSuppliers: Supplier[] = [
 
 const categories = ["Vegetables", "Seafood", "Meat", "Dry Goods", "Spices", "Oils", "Beverages", "Equipment", "Other"];
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  restaurantName: string;
+  restaurantAddress: string;
+}
+
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
   const [search, setSearch] = useState("");
@@ -42,8 +50,31 @@ export default function SuppliersPage() {
     category: "",
     notes: "",
   });
+  const [user, setUser] = useState<User | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("open-purchase-lang");
+    if (saved === "en" || saved === "zh") {
+      setLang(saved);
+    }
+    
+    const savedUser = localStorage.getItem('open-purchase-user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        setUser(null);
+      }
+    }
+  }, []);
 
   const isZh = lang === "zh";
+  const isBlankUser = user?.email === "eldon@chta.one" || user?.name === "";
+
+  // Show empty state for blank users
+  const effectiveSuppliers = isBlankUser ? [] : suppliers;
 
   const handleAddSupplier = () => {
     if (newSupplier.name && newSupplier.contact && newSupplier.phone && newSupplier.email) {
@@ -58,7 +89,7 @@ export default function SuppliersPage() {
     }
   };
 
-  const filteredSuppliers = suppliers.filter(
+  const filteredSuppliers = effectiveSuppliers.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.contact.toLowerCase().includes(search.toLowerCase()) ||
@@ -102,23 +133,58 @@ export default function SuppliersPage() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
         <div className="stat-card">
-          <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0 }}>{suppliers.length}</h3>
+          <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0 }}>{effectiveSuppliers.length}</h3>
           <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "供應商總數" : "Total Suppliers"}</p>
         </div>
         <div className="stat-card">
           <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0, color: 'var(--primary)' }}>
-            {suppliers.filter((s) => s.isActive).length}
+            {effectiveSuppliers.filter((s) => s.isActive).length}
           </h3>
           <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "活躍供應商" : "Active Suppliers"}</p>
         </div>
         <div className="stat-card">
           <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0, color: 'var(--muted)' }}>
-            {new Set(suppliers.map(s => s.category)).size}
+            {new Set(effectiveSuppliers.map(s => s.category)).size}
           </h3>
           <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "類別數量" : "Categories"}</p>
         </div>
       </div>
 
+      {/* Empty State for blank users */}
+      {isBlankUser ? (
+        <div style={{ 
+          background: 'var(--card-bg)', 
+          borderRadius: '16px', 
+          padding: '60px', 
+          boxShadow: '0 2px 8px var(--shadow)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏪</div>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
+            {isZh ? "還沒有供應商" : "No Suppliers Yet"}
+          </h2>
+          <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
+            {isZh ? "添加供應商來開始採購管理" : "Add suppliers to start managing your procurement"}
+          </p>
+          <button
+            onClick={() => setShowModal(true)}
+            style={{
+              display: 'inline-flex',
+              padding: '12px 24px',
+              background: 'var(--primary)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+            }}
+          >
+            {isZh ? "添加供應商" : "Add Supplier"}
+          </button>
+        </div>
+      ) : (
+        <>
       {/* Suppliers Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px' }}>
         {filteredSuppliers.map((supplier) => (
@@ -194,6 +260,7 @@ export default function SuppliersPage() {
           </div>
         ))}
       </div>
+      </>
 
       {/* Modal */}
       {showModal && (
