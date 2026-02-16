@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -23,7 +23,6 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
-import { useTheme } from "@/lib/i18n/ThemeContext";
 
 const stats = [
   {
@@ -104,9 +103,31 @@ const statusColors: Record<string, { bg: string; text: string }> = {
 };
 
 export default function DashboardPage() {
-  const { lang, t } = useTheme() as { lang: "en" | "zh"; t: any };
+  const [lang, setLang] = useState<"en" | "zh">("zh");
+  const [mounted, setMounted] = useState(false);
 
-  const currentLang = lang as "en" | "zh";
+  useEffect(() => {
+    setMounted(true);
+    const savedLang = localStorage.getItem("open-purchase-lang");
+    if (savedLang === "en" || savedLang === "zh") {
+      setLang(savedLang);
+    }
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>Dashboard</h1>
+            <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>Welcome back</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isZh = lang === "zh";
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -114,10 +135,10 @@ export default function DashboardPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
-            {t?.dashboard?.title || "Dashboard"}
+            {isZh ? "儀表板" : "Dashboard"}
           </h1>
           <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>
-            {t?.dashboard?.subtitle || "Welcome back"}
+            {isZh ? "歡迎回來" : "Welcome back"}
           </p>
         </div>
         <button
@@ -125,7 +146,7 @@ export default function DashboardPage() {
           style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
         >
           <Plus size={18} />
-          {t?.dashboard?.newOrder || "New Order"}
+          {isZh ? "新增訂單" : "New Order"}
         </button>
       </div>
 
@@ -152,7 +173,7 @@ export default function DashboardPage() {
                   margin: 0,
                 }}
               >
-                {currentLang === 'zh' ? stat.labelZh : stat.label}
+                {isZh ? stat.labelZh : stat.label}
               </p>
               <p
                 style={{
@@ -204,7 +225,7 @@ export default function DashboardPage() {
         {/* Orders Chart */}
         <div className="card" style={{ padding: '24px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
-            {currentLang === 'zh' ? '每週訂單' : 'Weekly Orders'}
+            {isZh ? '每週訂單' : 'Weekly Orders'}
           </h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={orderData}>
@@ -239,7 +260,7 @@ export default function DashboardPage() {
         {/* Spend Chart */}
         <div className="card" style={{ padding: '24px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
-            {currentLang === 'zh' ? '月度支出' : 'Monthly Spend'}
+            {isZh ? '月度支出' : 'Monthly Spend'}
           </h3>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={spendData}>
@@ -278,7 +299,7 @@ export default function DashboardPage() {
       <div className="card" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', margin: 0 }}>
-            {currentLang === 'zh' ? '最近訂單' : 'Recent Orders'}
+            {isZh ? '最近訂單' : 'Recent Orders'}
           </h3>
           <a
             href="/orders"
@@ -288,17 +309,17 @@ export default function DashboardPage() {
               fontWeight: '500',
             }}
           >
-            {currentLang === 'zh' ? '查看全部' : 'View All'} →
+            {isZh ? '查看全部' : 'View All'} →
           </a>
         </div>
         <table>
           <thead>
             <tr>
-              <th>{currentLang === 'zh' ? '訂單編號' : 'Order ID'}</th>
-              <th>{currentLang === 'zh' ? '供應商' : 'Supplier'}</th>
-              <th>{currentLang === 'zh' ? '項目' : 'Items'}</th>
-              <th>{currentLang === 'zh' ? '總額' : 'Total'}</th>
-              <th>{currentLang === 'zh' ? '狀態' : 'Status'}</th>
+              <th>{isZh ? '訂單編號' : 'Order ID'}</th>
+              <th>{isZh ? '供應商' : 'Supplier'}</th>
+              <th>{isZh ? '項目' : 'Items'}</th>
+              <th>{isZh ? '總額' : 'Total'}</th>
+              <th>{isZh ? '狀態' : 'Status'}</th>
               <th></th>
             </tr>
           </thead>
@@ -317,7 +338,7 @@ export default function DashboardPage() {
                       color: statusColors[order.status].text,
                     }}
                   >
-                    {currentLang === 'zh'
+                    {isZh
                       ? statusLabels[order.status].zh
                       : statusLabels[order.status].en}
                   </span>
