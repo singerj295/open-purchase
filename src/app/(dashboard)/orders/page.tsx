@@ -66,6 +66,7 @@ export default function OrdersPage() {
         id: String(orders.length + 1),
         orderNumber: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
         supplier: newOrder.supplier,
+        product: newOrder.product,
         items: parseInt(newOrder.items),
         total: parseFloat(newOrder.total),
         status: "pending",
