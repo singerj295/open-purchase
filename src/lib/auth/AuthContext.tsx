@@ -39,13 +39,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         setUser(JSON.parse(savedUser));
       } catch (e) {
-        setUser(defaultUser);
-        localStorage.setItem('open-purchase-user', JSON.stringify(defaultUser));
+        // No valid session, user needs to login
+        setUser(null);
       }
     } else {
-      // Auto-login with demo user for now
-      setUser(defaultUser);
-      localStorage.setItem('open-purchase-user', JSON.stringify(defaultUser));
+      // No saved user, stay logged out
+      setUser(null);
     }
     setIsLoading(false);
   }, []);
@@ -55,18 +54,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Simulate login
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    const user: User = {
-      id: "1",
-      name: "Restaurant Owner",
-      email,
-      restaurantName: "My Restaurant",
-      restaurantAddress: "123 Food Street, Hong Kong",
-    };
+    // Demo login
+    if (email === "demo@restaurant.com" || password === "demo") {
+      const user: User = {
+        id: "1",
+        name: "Restaurant Owner",
+        email: email,
+        restaurantName: "My Restaurant",
+        restaurantAddress: "123 Food Street, Hong Kong",
+      };
+      
+      setUser(user);
+      localStorage.setItem('open-purchase-user', JSON.stringify(user));
+      setIsLoading(false);
+      return true;
+    }
     
-    setUser(user);
-    localStorage.setItem('open-purchase-user', JSON.stringify(user));
     setIsLoading(false);
-    return true;
+    return false;
   };
 
   const logout = () => {

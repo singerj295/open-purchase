@@ -7,8 +7,8 @@ import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("demo@restaurant.com");
+  const [password, setPassword] = useState("demo");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,14 +39,25 @@ function LoginForm() {
     }
   };
 
+  const handleDemoLogin = () => {
+    setEmail("demo@restaurant.com");
+    setPassword("demo");
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      background: 'var(--background)'
+    }}>
       {/* Theme/Language Switcher */}
       <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
         <ThemeSwitcher />
       </div>
       
-      <div style={{ maxWidth: '400px', width: '100%' }}>
+      <div style={{ maxWidth: '400px', width: '100%', padding: '20px' }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: '700', color: 'var(--primary)', margin: 0 }}>🍽️ Open Purchase</h1>
@@ -115,6 +126,29 @@ function LoginForm() {
               {loading ? "登入中..." : "登入"}
             </button>
           </form>
+
+          {/* Demo Login Button */}
+          <div style={{ 
+            marginTop: '20px', 
+            paddingTop: '20px', 
+            borderTop: '1px solid rgba(128,128,128,0.1)' 
+          }}>
+            <p style={{ 
+              textAlign: 'center', 
+              color: 'var(--muted)', 
+              fontSize: '13px', 
+              marginBottom: '12px' 
+            }}>
+              或者
+            </p>
+            <button
+              onClick={handleDemoLogin}
+              className="btn-secondary"
+              style={{ width: '100%' }}
+            >
+              🔐 試用 Demo 帳戶
+            </button>
+          </div>
 
           <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--muted)', fontSize: '14px' }}>
             還沒有帳戶？{" "}
