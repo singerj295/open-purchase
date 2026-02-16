@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -14,6 +14,9 @@ import {
   Menu,
   Bell,
   Search,
+  LogOut,
+  User,
+  Building,
 } from "lucide-react";
 import { useTheme } from "@/lib/i18n/ThemeContext";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
@@ -33,6 +36,21 @@ function DashboardLayoutInner({
 }) {
   const { lang } = useTheme() as { lang: "en" | "zh" };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const isZh = lang === "zh";
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", labelZh: "儀表板", href: "/" },
@@ -45,6 +63,11 @@ function DashboardLayoutInner({
     { icon: Settings, label: "Settings", labelZh: "設定", href: "/settings" },
   ];
 
+  const handleLogout = () => {
+    localStorage.removeItem('open-purchase-user');
+    window.location.href = '/login';
+  };
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--background)' }}>
       {/* Sidebar */}
@@ -54,7 +77,8 @@ function DashboardLayoutInner({
         }`}
         style={{ 
           background: 'var(--card-bg)',
-          boxShadow: '2px 0 8px var(--shadow)'
+          boxShadow: '2px 0 8px var(--shadow)',
+          zIndex: 50,
         }}
       >
         {/* Logo */}
@@ -67,8 +91,13 @@ function DashboardLayoutInner({
           )}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2"
-            style={{ borderRadius: '8px' }}
+            style={{ 
+              padding: '8px', 
+              borderRadius: '8px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
             {sidebarCollapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
           </button>
@@ -87,7 +116,8 @@ function DashboardLayoutInner({
                 padding: '10px 12px',
                 borderRadius: '12px',
                 color: 'var(--foreground)',
-                transition: 'all 0.2s ease'
+                textDecoration: 'none',
+                transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(45, 158, 109, 0.1)';
@@ -100,7 +130,7 @@ function DashboardLayoutInner({
             >
               <item.icon size={20} />
               {!sidebarCollapsed && (
-                <span>{lang === 'zh' ? item.labelZh : item.label}</span>
+                <span>{isZh ? item.labelZh : item.label}</span>
               )}
             </a>
           ))}
@@ -114,10 +144,10 @@ function DashboardLayoutInner({
       >
         {/* Header */}
         <header 
-          className="h-16 flex items-center justify-between px-6 sticky top-0 z-10"
+          className="h-16 flex items-center justify-between px-6 sticky top-0 z-40"
           style={{ 
             background: 'var(--card-bg)',
-            boxShadow: '0 2px 8px var(--shadow)'
+            boxShadow: '0 2px 8px var(--shadow)',
           }}
         >
           <div className="flex items-center gap-4 flex-1">
@@ -129,34 +159,139 @@ function DashboardLayoutInner({
               />
               <input
                 type="text"
-                placeholder={lang === 'zh' ? "搜尋商品、供應商、訂單..." : "Search products, suppliers, orders..."}
+                placeholder={isZh ? "搜尋..." : "Search..."}
                 className="search-input"
               />
             </div>
           </div>
           <div className="flex items-center gap-4">
             <ThemeSwitcher />
-            <button 
-              className="p-2"
-              style={{ borderRadius: '12px' }}
-            >
-              <Bell size={20} />
-            </button>
-            <div 
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                background: 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 500,
-                fontSize: '14px'
-              }}
-            >
-              OP
+            
+            {/* User Menu */}
+            <div style={{ position: 'relative' }} ref={menuRef}>
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'var(--primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: '500',
+                  fontSize: '14px',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                OP
+              </button>
+              
+              {showUserMenu && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '8px',
+                    width: '240px',
+                    background: 'var(--card-bg)',
+                    borderRadius: '16px',
+                    boxShadow: '0 4px 20px var(--shadow)',
+                    overflow: 'hidden',
+                    zIndex: 100,
+                  }}
+                >
+                  {/* User Info */}
+                  <div style={{ padding: '16px', borderBottom: '1px solid rgba(128,128,128,0.1)' }}>
+                    <p style={{ fontWeight: '600', margin: 0 }}>Restaurant Owner</p>
+                    <p style={{ color: 'var(--muted)', fontSize: '13px', margin: '4px 0 0 0' }}>demo@restaurant.com</p>
+                  </div>
+                  
+                  {/* Menu Items */}
+                  <div style={{ padding: '8px' }}>
+                    <a
+                      href="/settings"
+                      onClick={() => setShowUserMenu(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        color: 'var(--foreground)',
+                        textDecoration: 'none',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(128,128,128,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <User size={18} />
+                      <span>{isZh ? "個人資料" : "Profile"}</span>
+                    </a>
+                    
+                    <a
+                      href="/settings"
+                      onClick={() => setShowUserMenu(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        color: 'var(--foreground)',
+                        textDecoration: 'none',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(128,128,128,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <Building size={18} />
+                      <span>{isZh ? "餐廳資料" : "Restaurant"}</span>
+                    </a>
+                    
+                    <div style={{ height: '1px', background: 'rgba(128,128,128,0.1)', margin: '8px 0' }} />
+                    
+                    <button
+                      onClick={handleLogout}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        color: '#ef4444',
+                        background: 'transparent',
+                        border: 'none',
+                        width: '100%',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <LogOut size={18} />
+                      <span>{isZh ? "登出" : "Logout"}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
