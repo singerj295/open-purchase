@@ -86,6 +86,12 @@ export default function SuppliersPage() {
     }
   };
 
+  const handleDeleteSupplier = (id: string) => {
+    if (confirm(isZh ? "確定刪除此供應商？" : "Delete this supplier?")) {
+      setSuppliers(suppliers.filter(s => s.id !== id));
+    }
+  };
+
   const filteredSuppliers = suppliers.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -249,7 +255,7 @@ export default function SuppliersPage() {
               <button className="btn-secondary" style={{ padding: '10px' }}>
                 <Edit size={18} />
               </button>
-              <button className="btn-secondary" style={{ padding: '10px', color: '#ef4444' }}>
+              <button className="btn-secondary" style={{ padding: '10px', color: '#ef4444' }} onClick={() => handleDeleteSupplier(supplier.id)}>
                 <Trash2 size={18} />
               </button>
             </div>

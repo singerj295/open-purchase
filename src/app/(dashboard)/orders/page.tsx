@@ -105,6 +105,12 @@ export default function OrdersPage() {
     }
   };
 
+  const handleDeleteOrder = (id: string) => {
+    if (confirm(isZh ? "確定刪除此訂單？" : "Delete this order?")) {
+      setOrders(orders.filter(o => o.id !== id));
+    }
+  };
+
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
@@ -267,7 +273,7 @@ export default function OrdersPage() {
                         <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
                           <Edit size={16} />
                         </button>
-                        <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444' }}>
+                        <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444' }} onClick={() => handleDeleteOrder(order.id)}>
                           <Trash2 size={16} />
                         </button>
                       </div>
