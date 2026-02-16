@@ -1,99 +1,247 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f9fafb;
-  --foreground: #111827;
+  /* Light mode - Clean flat design */
+  --background: #f5f5f5;
+  --foreground: #1a1a1a;
   --card-bg: #ffffff;
-  --card-border: #e5e7eb;
-  --muted: #6b7280;
-  --primary: #10b981;
-  --primary-hover: #059669;
+  --muted: #757575;
+  --primary: #2d9e6d;
+  --primary-hover: #248a5c;
+  --accent: #5ac8fa;
+  --shadow: rgba(0, 0, 0, 0.08);
 }
 
 .dark {
-  --background: #111827;
-  --foreground: #f9fafb;
-  --card-bg: #1f2937;
-  --card-border: #374151;
-  --muted: #9ca3af;
-  --primary: #10b981;
-  --primary-hover: #34d399;
+  /* Dark mode - Flat dark */
+  --background: #1a1a1a;
+  --foreground: #f5f5f5;
+  --card-bg: #252525;
+  --muted: #a0a0a0;
+  --primary: #3db88a;
+  --primary-hover: #5ac8fa;
+  --accent: #5ac8fa;
+  --shadow: rgba(0, 0, 0, 0.3);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card-bg);
-  --color-card-border: var(--card-border);
   --color-muted: var(--muted);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
   transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Dark mode toggle button styles */
-.dark-mode-toggle {
-  @apply p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors;
-}
-
-/* Card styles */
+/* Flat cards - no borders, soft shadows */
 .card {
-  @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px var(--shadow);
+  border: none;
 }
 
-/* Button styles */
+/* Flat buttons */
 .btn-primary {
-  @apply px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  @apply px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors;
+  background: transparent;
+  color: var(--foreground);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* Input styles */
+.btn-secondary:hover {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+/* Flat inputs */
 .input {
-  @apply w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 14px;
+  outline: none;
+  transition: box-shadow 0.2s ease;
 }
 
-/* Table styles */
-.table-header {
-  @apply bg-gray-50 dark:bg-gray-700;
+.input:focus {
+  box-shadow: 0 0 0 2px var(--primary);
 }
 
-.table-row-hover {
-  @apply hover:bg-gray-50 dark:hover:bg-gray-700;
-}
-
-/* Sidebar styles */
+/* Sidebar - flat */
 .sidebar {
-  @apply bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700;
+  background: var(--card-bg);
+  border: none;
+  box-shadow: 2px 0 8px var(--shadow);
 }
 
-/* Status badge styles */
+/* Header - flat */
+.header {
+  background: var(--card-bg);
+  border: none;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* Tables - flat style */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 16px;
+}
+
+td {
+  padding: 16px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background: rgba(128, 128, 128, 0.05);
+}
+
+/* Status badges - softer */
+.badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .badge-pending {
-  @apply bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300;
+  background: rgba(251, 191, 36, 0.15);
+  color: #d97706;
 }
 
 .badge-confirmed {
-  @apply bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300;
+  background: rgba(139, 92, 246, 0.15);
+  color: #7c3aed;
 }
 
 .badge-shipped {
-  @apply bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300;
+  background: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
 }
 
 .badge-delivered {
-  @apply bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300;
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
 }
 
 .badge-cancelled {
-  @apply bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300;
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
+/* Stats cards - more minimalist */
+.stat-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px var(--shadow);
+  border: none;
+}
+
+/* Theme toggle - flat */
+.theme-toggle {
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Search input - clean */
+.search-input {
+  background: var(--background);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px 12px 44px;
+  width: 100%;
+  outline: none;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* Remove all harsh borders */
+* {
+  border-radius: 0 !important;
+}
+
+.card, .stat-card, .btn-primary, .btn-secondary, .input, .search-input, .theme-toggle {
+  border-radius: 12px !important;
+}
+
+/* Smooth animations */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }

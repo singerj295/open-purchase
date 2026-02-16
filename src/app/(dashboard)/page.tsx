@@ -1,7 +1,28 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
-import { ArrowUpRight, ArrowDownRight, Package, ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  Package,
+  ShoppingCart,
+  DollarSign,
+  TrendingUp,
+  Plus,
+  Eye,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import { useTheme } from "@/lib/i18n/ThemeContext";
 
 const stats = [
@@ -12,8 +33,7 @@ const stats = [
     change: "+12%",
     trend: "up",
     icon: ShoppingCart,
-    color: "text-blue-600",
-    bg: "bg-blue-100",
+    color: "#3b82f6",
   },
   {
     label: "Active Suppliers",
@@ -22,8 +42,7 @@ const stats = [
     change: "+2",
     trend: "up",
     icon: Package,
-    color: "text-emerald-600",
-    bg: "bg-emerald-100",
+    color: "#10b981",
   },
   {
     label: "Monthly Spend",
@@ -32,8 +51,7 @@ const stats = [
     change: "-5%",
     trend: "down",
     icon: DollarSign,
-    color: "text-purple-600",
-    bg: "bg-purple-100",
+    color: "#8b5cf6",
   },
   {
     label: "Cost Savings",
@@ -42,8 +60,7 @@ const stats = [
     change: "+18%",
     trend: "up",
     icon: TrendingUp,
-    color: "text-orange-600",
-    bg: "bg-orange-100",
+    color: "#f97316",
   },
 ];
 
@@ -79,103 +96,178 @@ const statusLabels: Record<string, { en: string; zh: string }> = {
   confirmed: { en: "Confirmed", zh: "已確認" },
 };
 
+const statusColors: Record<string, { bg: string; text: string }> = {
+  delivered: { bg: "rgba(16, 185, 129, 0.15)", text: "#059669" },
+  shipping: { bg: "rgba(59, 130, 246, 0.15)", text: "#2563eb" },
+  pending: { bg: "rgba(251, 191, 36, 0.15)", text: "#d97706" },
+  confirmed: { bg: "rgba(139, 92, 246, 0.15)", text: "#7c3aed" },
+};
+
 export default function DashboardPage() {
-  const { lang, t } = useTheme();
+  const { lang, t } = useTheme() as { lang: "en" | "zh"; t: any };
+
+  const currentLang = lang as "en" | "zh";
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Welcome */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t.dashboard.title}</h1>
-          <p className="text-gray-500">{t.dashboard.subtitle}</p>
+          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
+            {t?.dashboard?.title || "Dashboard"}
+          </h1>
+          <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>
+            {t?.dashboard?.subtitle || "Welcome back"}
+          </p>
         </div>
-        <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
-          + {t.dashboard.newOrder}
+        <button
+          className="btn-primary"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <Plus size={18} />
+          {t?.dashboard?.newOrder || "New Order"}
         </button>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '20px',
+        }}
+      >
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-white rounded-xl p-6 shadow-sm border"
+            className="stat-card"
+            style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}
           >
-            <div className="flex items-center justify-between">
-              <div className={`p-3 rounded-lg ${stat.bg}`}>
-                <stat.icon className={stat.color} size={24} />
-              </div>
-              <span
-                className={`flex items-center gap-1 text-sm font-medium ${
-                  stat.trend === "up" ? "text-emerald-600" : "text-red-600"
-                }`}
+            <div>
+              <p
+                style={{
+                  color: 'var(--muted)',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  margin: 0,
+                }}
               >
-                {stat.change}
-                {stat.trend === "up" ? (
-                  <ArrowUpRight size={16} />
+                {currentLang === 'zh' ? stat.labelZh : stat.label}
+              </p>
+              <p
+                style={{
+                  fontSize: '28px',
+                  fontWeight: '600',
+                  margin: '8px 0',
+                  color: 'var(--foreground)',
+                }}
+              >
+                {stat.value}
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {stat.trend === 'up' ? (
+                  <ArrowUpRight size={16} color="#10b981" />
                 ) : (
-                  <ArrowDownRight size={16} />
+                  <ArrowDownRight size={16} color="#ef4444" />
                 )}
-              </span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    color: stat.trend === 'up' ? '#10b981' : '#ef4444',
+                  }}
+                >
+                  {stat.change}
+                </span>
+              </div>
             </div>
-            <div className="mt-4">
-              <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-              <p className="text-gray-500 text-sm">{lang === 'zh' ? stat.labelZh : stat.label}</p>
+            <div
+              style={{
+                padding: '12px',
+                borderRadius: '12px',
+                background: `${stat.color}15`,
+              }}
+            >
+              <stat.icon size={24} color={stat.color} />
             </div>
           </div>
         ))}
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+          gap: '20px',
+        }}
+      >
         {/* Orders Chart */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {lang === 'zh' ? '本週訂單' : 'Orders This Week'}
+        <div className="card" style={{ padding: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
+            {currentLang === 'zh' ? '每週訂單' : 'Weekly Orders'}
           </h3>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={200}>
             <BarChart data={orderData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'var(--muted)', fontSize: 12 }}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'var(--muted)', fontSize: 12 }}
+              />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  background: 'var(--card-bg)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px var(--shadow)',
                 }}
               />
-              <Bar dataKey="orders" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="orders"
+                fill="var(--primary)"
+                radius={[8, 8, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Spend Chart */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {lang === 'zh' ? '月度支出' : 'Monthly Spend'}
+        <div className="card" style={{ padding: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
+            {currentLang === 'zh' ? '月度支出' : 'Monthly Spend'}
           </h3>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={200}>
             <LineChart data={spendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'var(--muted)', fontSize: 12 }}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'var(--muted)', fontSize: 12 }}
+              />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  background: 'var(--card-bg)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px var(--shadow)',
                 }}
               />
               <Line
                 type="monotone"
                 dataKey="spend"
-                stroke="#3b82f6"
+                stroke="var(--primary)"
                 strokeWidth={2}
-                dot={{ fill: "#3b82f6" }}
+                dot={{ fill: 'var(--primary)', strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -183,71 +275,95 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-xl shadow-sm border">
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">{t.dashboard.recentOrders}</h3>
-            <a href="/orders" className="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
-              {lang === 'zh' ? '查看全部 →' : 'View All →'}
-            </a>
-          </div>
+      <div className="card" style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: 0 }}>
+            {currentLang === 'zh' ? '最近訂單' : 'Recent Orders'}
+          </h3>
+          <a
+            href="/orders"
+            style={{
+              fontSize: '14px',
+              color: 'var(--primary)',
+              fontWeight: '500',
+            }}
+          >
+            {currentLang === 'zh' ? '查看全部' : 'View All'} →
+          </a>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {lang === 'zh' ? '訂單編號' : 'Order ID'}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t.orders.supplier}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t.orders.items}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t.orders.total}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t.orders.status}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {recentOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-emerald-600">
-                    {order.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {order.supplier}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.items} {lang === 'zh' ? '項' : 'items'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {order.total}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                        order.status === "delivered"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : order.status === "shipping"
-                          ? "bg-blue-100 text-blue-700"
-                          : order.status === "confirmed"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
+        <table>
+          <thead>
+            <tr>
+              <th>{currentLang === 'zh' ? '訂單編號' : 'Order ID'}</th>
+              <th>{currentLang === 'zh' ? '供應商' : 'Supplier'}</th>
+              <th>{currentLang === 'zh' ? '項目' : 'Items'}</th>
+              <th>{currentLang === 'zh' ? '總額' : 'Total'}</th>
+              <th>{currentLang === 'zh' ? '狀態' : 'Status'}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentOrders.map((order) => (
+              <tr key={order.id}>
+                <td style={{ fontWeight: '500' }}>{order.id}</td>
+                <td style={{ color: 'var(--muted)' }}>{order.supplier}</td>
+                <td>{order.items}</td>
+                <td style={{ fontWeight: '500' }}>{order.total}</td>
+                <td>
+                  <span
+                    className="badge"
+                    style={{
+                      background: statusColors[order.status].bg,
+                      color: statusColors[order.status].text,
+                    }}
+                  >
+                    {currentLang === 'zh'
+                      ? statusLabels[order.status].zh
+                      : statusLabels[order.status].en}
+                  </span>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      style={{
+                        padding: '6px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                      }}
                     >
-                      {statusLabels[order.status]?.[lang] || order.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      <Eye size={16} />
+                    </button>
+                    <button
+                      style={{
+                        padding: '6px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      style={{
+                        padding: '6px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        color: '#ef4444',
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
