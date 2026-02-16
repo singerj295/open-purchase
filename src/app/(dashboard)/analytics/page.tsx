@@ -309,7 +309,7 @@ export default function AnalyticsPage() {
                   borderRadius: '8px',
                   boxShadow: '0 4px 12px var(--shadow)',
                 }}
-                formatter={(value: number) => [`$${value.toLocaleString()}`, 'Spend']}
+                formatter={(value: number | undefined) => [`$${(value || 0).toLocaleString()}`, 'Spend']}
               />
               <Bar dataKey="spend" fill="var(--primary)" radius={[8, 8, 0, 0]} />
             </BarChart>
@@ -345,7 +345,7 @@ export default function AnalyticsPage() {
                       borderRadius: '8px',
                       boxShadow: '0 4px 12px var(--shadow)',
                     }}
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Spend']}
+                    formatter={(value: number | undefined) => [`$${(value || 0).toLocaleString()}`, 'Spend']}
                   />
                 </PieChart>
               </ResponsiveContainer>
