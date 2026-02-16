@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search, Filter, Eye, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Eye, Edit, Trash2, X } from "lucide-react";
 
 interface Order {
   id: string;
@@ -23,6 +23,8 @@ const mockOrders: Order[] = [
   { id: "7", orderNumber: "ORD-007", supplier: "Fresh Farm Co", items: 20, total: 380, status: "delivered", date: "2026-02-13" },
 ];
 
+const suppliers = ["Fresh Farm Co", "Ocean Seafood", "Kitchen Supplies Ltd", "Spice World"];
+
 const statusColors: Record<string, { bg: string; text: string }> = {
   pending: { bg: "rgba(251, 191, 36, 0.15)", text: "#d97706" },
   confirmed: { bg: "rgba(139, 92, 246, 0.15)", text: "#7c3aed" },
@@ -40,12 +42,35 @@ const statusLabels: Record<string, { en: string; zh: string }> = {
 };
 
 export default function OrdersPage() {
-  const [orders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [lang, setLang] = useState<"en" | "zh">("zh");
+  const [showModal, setShowModal] = useState(false);
+  const [newOrder, setNewOrder] = useState({
+    supplier: "",
+    items: "",
+    total: "",
+  });
 
   const isZh = lang === "zh";
+
+  const handleAddOrder = () => {
+    if (newOrder.supplier && newOrder.items && newOrder.total) {
+      const order: Order = {
+        id: String(orders.length + 1),
+        orderNumber: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
+        supplier: newOrder.supplier,
+        items: parseInt(newOrder.items),
+        total: parseFloat(newOrder.total),
+        status: "pending",
+        date: new Date().toISOString().split('T')[0],
+      };
+      setOrders([order, ...orders]);
+      setShowModal(false);
+      setNewOrder({ supplier: "", items: "", total: "" });
+    }
+  };
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -74,7 +99,11 @@ export default function OrdersPage() {
             {isZh ? "管理你的採購訂單" : "Manage your purchase orders"}
           </p>
         </div>
-        <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button
+          className="btn-primary"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          onClick={() => setShowModal(true)}
+        >
           <Plus size={18} />
           {isZh ? "新增訂單" : "New Order"}
         </button>
@@ -100,10 +129,7 @@ export default function OrdersPage() {
       {/* Filters */}
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-          <Search
-            style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }}
-            size={18}
-          />
+          <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} size={18} />
           <input
             type="text"
             placeholder={isZh ? "搜尋訂單..." : "Search orders..."}
@@ -149,10 +175,7 @@ export default function OrdersPage() {
                 <td>{order.items}</td>
                 <td style={{ fontWeight: '500' }}>${order.total}</td>
                 <td>
-                  <span
-                    className="badge"
-                    style={{ background: statusColors[order.status].bg, color: statusColors[order.status].text }}
-                  >
+                  <span className="badge" style={{ background: statusColors[order.status].bg, color: statusColors[order.status].text }}>
                     {isZh ? statusLabels[order.status].zh : statusLabels[order.status].en}
                   </span>
                 </td>
@@ -175,6 +198,96 @@ export default function OrdersPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div className="card" style={{ width: '100%', maxWidth: '480px', padding: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
+                {isZh ? "新增訂單" : "New Order"}
+              </h2>
+              <button onClick={() => setShowModal(false)} style={{ padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "供應商" : "Supplier"}
+                </label>
+                <select
+                  value={newOrder.supplier}
+                  onChange={(e) => setNewOrder({ ...newOrder, supplier: e.target.value })}
+                  className="input"
+                  style={{ width: '100%' }}
+                >
+                  <option value="">{isZh ? "選擇供應商" : "Select supplier"}</option>
+                  {suppliers.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "項目數量" : "Number of Items"}
+                </label>
+                <input
+                  type="number"
+                  value={newOrder.items}
+                  onChange={(e) => setNewOrder({ ...newOrder, items: e.target.value })}
+                  className="input"
+                  placeholder={isZh ? "輸入數量" : "Enter quantity"}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "總額 ($)" : "Total ($)"}
+                </label>
+                <input
+                  type="number"
+                  value={newOrder.total}
+                  onChange={(e) => setNewOrder({ ...newOrder, total: e.target.value })}
+                  className="input"
+                  placeholder={isZh ? "輸入金額" : "Enter amount"}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  {isZh ? "取消" : "Cancel"}
+                </button>
+                <button
+                  onClick={handleAddOrder}
+                  className="btn-primary"
+                  style={{ flex: 1 }}
+                  disabled={!newOrder.supplier || !newOrder.items || !newOrder.total}
+                >
+                  {isZh ? "創建訂單" : "Create Order"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin, X } from "lucide-react";
 
 interface Supplier {
   id: string;
@@ -22,24 +21,38 @@ const mockSuppliers: Supplier[] = [
 ];
 
 export default function SuppliersPage() {
-  const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
   const [search, setSearch] = useState("");
   const [lang, setLang] = useState<"en" | "zh">("zh");
+  const [showModal, setShowModal] = useState(false);
+  const [newSupplier, setNewSupplier] = useState({
+    name: "",
+    contact: "",
+    phone: "",
+    email: "",
+    address: "",
+  });
 
   const isZh = lang === "zh";
+
+  const handleAddSupplier = () => {
+    if (newSupplier.name && newSupplier.contact && newSupplier.phone && newSupplier.email) {
+      const supplier: Supplier = {
+        id: String(suppliers.length + 1),
+        ...newSupplier,
+        isActive: true,
+      };
+      setSuppliers([...suppliers, supplier]);
+      setShowModal(false);
+      setNewSupplier({ name: "", contact: "", phone: "", email: "", address: "" });
+    }
+  };
 
   const filteredSuppliers = suppliers.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.contact.toLowerCase().includes(search.toLowerCase())
   );
-
-  const handleDelete = (id: string) => {
-    if (confirm(isZh ? "確定刪除此供應商？" : "Delete this supplier?")) {
-      setSuppliers(suppliers.filter((s) => s.id !== id));
-    }
-  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -54,9 +67,9 @@ export default function SuppliersPage() {
           </p>
         </div>
         <button
-          onClick={() => alert(isZh ? "新增供應商功能即將推出" : "Add Supplier feature coming soon")}
           className="btn-primary"
           style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          onClick={() => setShowModal(true)}
         >
           <Plus size={18} />
           {isZh ? "新增供應商" : "Add Supplier"}
@@ -65,10 +78,7 @@ export default function SuppliersPage() {
 
       {/* Search */}
       <div style={{ position: 'relative', maxWidth: '400px' }}>
-        <Search
-          style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }}
-          size={18}
-        />
+        <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} size={18} />
         <input
           type="text"
           placeholder={isZh ? "搜尋供應商..." : "Search suppliers..."}
@@ -107,29 +117,23 @@ export default function SuppliersPage() {
                 <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>{supplier.name}</h3>
                 <p style={{ color: 'var(--muted)', fontSize: '14px', marginTop: '4px' }}>{supplier.contact}</p>
               </div>
-              <span
-                className="badge"
-                style={{
-                  background: supplier.isActive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(107, 114, 128, 0.15)',
-                  color: supplier.isActive ? '#059669' : '#6b7280',
-                }}
-              >
+              <span className="badge" style={{
+                background: supplier.isActive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(107, 114, 128, 0.15)',
+                color: supplier.isActive ? '#059669' : '#6b7280',
+              }}>
                 {supplier.isActive ? (isZh ? "活躍" : "Active") : (isZh ? "暫停" : "Inactive")}
               </span>
             </div>
 
             <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)', fontSize: '14px' }}>
-                <Phone size={14} />
-                {supplier.phone}
+                <Phone size={14} />{supplier.phone}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)', fontSize: '14px' }}>
-                <Mail size={14} />
-                {supplier.email}
+                <Mail size={14} />{supplier.email}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)', fontSize: '14px' }}>
-                <MapPin size={14} />
-                {supplier.address}
+                <MapPin size={14} />{supplier.address}
               </div>
             </div>
 
@@ -137,16 +141,12 @@ export default function SuppliersPage() {
               <button className="btn-secondary" style={{ flex: 1 }}>
                 {isZh ? "聯絡" : "Contact"}
               </button>
-              <button
-                className="btn-secondary"
-                style={{ padding: '10px' }}
-              >
+              <button className="btn-secondary" style={{ padding: '10px' }}>
                 <Edit size={18} />
               </button>
               <button
                 className="btn-secondary"
                 style={{ padding: '10px', color: '#ef4444' }}
-                onClick={() => handleDelete(supplier.id)}
               >
                 <Trash2 size={18} />
               </button>
@@ -154,6 +154,123 @@ export default function SuppliersPage() {
           </div>
         ))}
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div className="card" style={{ width: '100%', maxWidth: '480px', padding: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
+                {isZh ? "新增供應商" : "Add Supplier"}
+              </h2>
+              <button onClick={() => setShowModal(false)} style={{ padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "公司名稱" : "Company Name"}
+                </label>
+                <input
+                  type="text"
+                  value={newSupplier.name}
+                  onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
+                  className="input"
+                  placeholder={isZh ? "輸入公司名稱" : "Enter company name"}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "聯絡人" : "Contact Person"}
+                </label>
+                <input
+                  type="text"
+                  value={newSupplier.contact}
+                  onChange={(e) => setNewSupplier({ ...newSupplier, contact: e.target.value })}
+                  className="input"
+                  placeholder={isZh ? "輸入聯絡人姓名" : "Enter contact name"}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "電話" : "Phone"}
+                </label>
+                <input
+                  type="text"
+                  value={newSupplier.phone}
+                  onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
+                  className="input"
+                  placeholder={isZh ? "輸入電話號碼" : "Enter phone number"}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "電郵" : "Email"}
+                </label>
+                <input
+                  type="email"
+                  value={newSupplier.email}
+                  onChange={(e) => setNewSupplier({ ...newSupplier, email: e.target.value })}
+                  className="input"
+                  placeholder={isZh ? "輸入電郵地址" : "Enter email address"}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "地址" : "Address"}
+                </label>
+                <input
+                  type="text"
+                  value={newSupplier.address}
+                  onChange={(e) => setNewSupplier({ ...newSupplier, address: e.target.value })}
+                  className="input"
+                  placeholder={isZh ? "輸入公司地址" : "Enter company address"}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  {isZh ? "取消" : "Cancel"}
+                </button>
+                <button
+                  onClick={handleAddSupplier}
+                  className="btn-primary"
+                  style={{ flex: 1 }}
+                  disabled={!newSupplier.name || !newSupplier.contact || !newSupplier.phone || !newSupplier.email}
+                >
+                  {isZh ? "創建供應商" : "Create Supplier"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
