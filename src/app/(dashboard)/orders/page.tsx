@@ -78,6 +78,31 @@ export default function OrdersPage() {
         setUser(null);
       }
     }
+
+    // Load orders from localStorage
+    const savedOrders = localStorage.getItem('open-purchase-orders');
+    if (savedOrders) {
+      try {
+        setOrders(JSON.parse(savedOrders));
+      } catch (e) {
+        setOrders([]);
+      }
+    }
+
+    // Listen for storage changes
+    const handleStorageChange = () => {
+      const savedOrders = localStorage.getItem('open-purchase-orders');
+      if (savedOrders) {
+        try {
+          setOrders(JSON.parse(savedOrders));
+        } catch (e) {
+          setOrders([]);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const isZh = lang === "zh";

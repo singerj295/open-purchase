@@ -68,6 +68,31 @@ export default function SuppliersPage() {
         setUser(null);
       }
     }
+
+    // Load suppliers from localStorage
+    const savedSuppliers = localStorage.getItem('open-purchase-suppliers');
+    if (savedSuppliers) {
+      try {
+        setSuppliers(JSON.parse(savedSuppliers));
+      } catch (e) {
+        setSuppliers([]);
+      }
+    }
+
+    // Listen for storage changes (when user updates from another tab/page)
+    const handleStorageChange = () => {
+      const savedSuppliers = localStorage.getItem('open-purchase-suppliers');
+      if (savedSuppliers) {
+        try {
+          setSuppliers(JSON.parse(savedSuppliers));
+        } catch (e) {
+          setSuppliers([]);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const isZh = lang === "zh";
