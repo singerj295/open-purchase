@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   BarChart,
   Bar,
@@ -103,6 +104,7 @@ const statusLabels: Record<string, { en: string; zh: string }> = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [lang, setLang] = useState("zh");
   const [mounted, setMounted] = useState(false);
 
@@ -186,6 +188,7 @@ export default function DashboardPage() {
             fontWeight: '500',
             cursor: 'pointer',
           }}
+          onClick={() => router.push('/orders')}
         >
           <Plus size={18} />
           {isZh ? "新增訂單" : "New Order"}
