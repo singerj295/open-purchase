@@ -183,9 +183,8 @@ export default function SuppliersPage() {
             {isZh ? "添加供應商" : "Add Supplier"}
           </button>
         </div>
-      ) : (
+        ) : (
         <>
-      {/* Suppliers Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px' }}>
         {filteredSuppliers.map((supplier) => (
           <div key={supplier.id} className="card" style={{ padding: '24px' }}>
@@ -260,7 +259,7 @@ export default function SuppliersPage() {
           </div>
         ))}
       </div>
-      )}
+      </>)}
 
       {/* Modal */}
       {showModal && (
