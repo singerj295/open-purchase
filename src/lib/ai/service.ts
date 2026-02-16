@@ -1,5 +1,5 @@
-// AI Service using Claude API
-// Configure in .env: ANTHROPIC_API_KEY
+// AI Service using MiniMax API (or Claude as fallback)
+// Configure in .env: MINIMAX_API_KEY (or ANTHROPIC_API_KEY)
 
 interface CostAnalysisInput {
   orders: Array<{
@@ -37,18 +37,63 @@ export class AIService {
    * Analyze cost trends and provide insights
    */
   async analyzeCosts(input: CostAnalysisInput): Promise<AIInsight[]> {
-    if (!this.apiKey) {
+    // Try MiniMax first, then fallback to Claude
+    const minimaxKey = process.env.MINIMAX_API_KEY || '';
+    const anthropicKey = process.env.ANTHROPIC_API_KEY || '';
+
+    if (minimaxKey) {
+      console.log('🤖 AI Analysis (MiniMax)');
+      return this.analyzeWithMiniMax(input);
+    } else if (anthropicKey) {
+      console.log('🤖 AI Analysis (Claude)');
+      return this.analyzeWithClaude(input);
+    } else {
       console.log('🤖 AI Analysis (Demo Mode)');
       return this.getDemoInsights(input);
     }
+  }
 
+  /**
+   * MiniMax API implementation
+   */
+  private async analyzeWithMiniMax(input: CostAnalysisInput): Promise<AIInsight[]> {
+    try {
+      const prompt = this.buildCostAnalysisPrompt(input);
+      
+      const response = await fetch('https://api.minimax.chat/v1/text/chatcompletion_v2', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'MiniMax-M2.1',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 1024,
+          temperature: 0.7,
+        }),
+      });
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content || '';
+      return this.parseInsights(text);
+    } catch (error) {
+      console.error('MiniMax API error:', error);
+      return this.getDemoInsights(input);
+    }
+  }
+
+  /**
+   * Claude API implementation (fallback)
+   */
+  private async analyzeWithClaude(input: CostAnalysisInput): Promise<AIInsight[]> {
     try {
       const prompt = this.buildCostAnalysisPrompt(input);
       
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': `Bearer ${process.env.ANTHROPIC_API_KEY}`,
           'Content-Type': 'application/json',
           'x-api-version': '2023-06-01',
           'anthropic-version': '2023-06-01',
@@ -61,9 +106,10 @@ export class AIService {
       });
 
       const data = await response.json();
-      return this.parseInsights(data.content?.[0]?.text || '');
+      const text = data.content?.[0]?.text || '';
+      return this.parseInsights(text);
     } catch (error) {
-      console.error('AI analysis error:', error);
+      console.error('Claude API error:', error);
       return this.getDemoInsights(input);
     }
   }
@@ -75,7 +121,10 @@ export class AIService {
     productName: string,
     requirements: { quantity: number; quality: string; budget: number }
   ): Promise<{ supplier: string; reasoning: string; confidence: number }> {
-    if (!this.apiKey) {
+    const minimaxKey = process.env.MINIMAX_API_KEY || '';
+    const anthropicKey = process.env.ANTHROPIC_API_KEY || '';
+
+    if (!minimaxKey && !anthropicKey) {
       return {
         supplier: 'Fresh Farm Co',
         reasoning: 'Based on product category and typical pricing',
@@ -83,8 +132,7 @@ export class AIService {
       };
     }
 
-    try {
-      const prompt = `Recommend a supplier for:
+    const prompt = `Recommend a supplier for:
 Product: ${productName}
 Quantity needed: ${requirements.quantity}
 Quality level: ${requirements.quality}
@@ -92,25 +140,46 @@ Budget: $${requirements.budget}
 
 Available suppliers: Fresh Farm Co, Ocean Seafood, Kitchen Supplies Ltd, Spice World
 
-Return JSON: { "supplier": "name", "reasoning": "why", "confidence": 0.0-1.0 }`;
+Return JSON only: { "supplier": "name", "reasoning": "why", "confidence": 0.0-1.0 }`;
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'x-api-version': '2023-06-01',
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 256,
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      });
+    try {
+      if (minimaxKey) {
+        const response = await fetch('https://api.minimax.chat/v1/text/chatcompletion_v2', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${minimaxKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'MiniMax-M2.1',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 256,
+          }),
+        });
 
-      const data = await response.json();
-      return JSON.parse(data.content?.[0]?.text || '{"supplier":"Fresh Farm Co","reasoning":"Default","confidence":0.5}');
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content || '';
+        return JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || '{"supplier":"Fresh Farm Co","reasoning":"Default","confidence":0.5}');
+      } else {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${anthropicKey}`,
+            'Content-Type': 'application/json',
+            'x-api-version': '2023-06-01',
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 256,
+            messages: [{ role: 'user', content: prompt }],
+          }),
+        });
+
+        const data = await response.json();
+        const text = data.content?.[0]?.text || '';
+        return JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || '{"supplier":"Fresh Farm Co","reasoning":"Default","confidence":0.5}');
+      }
     } catch (error) {
       return {
         supplier: 'Fresh Farm Co',

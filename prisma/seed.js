@@ -1,7 +1,7 @@
 // Open Purchase - Database Seed Script
-// Run: npx prisma db seed
+// Run: npx ts-node prisma/seed.js
 
-import { PrismaClient } from '@prisma/client';
+const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
