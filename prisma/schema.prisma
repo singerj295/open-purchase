@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Supplier {
+  id          String    @id @default(cuid())
+  name        String
+  contact     String?
+  phone       String?
+  email       String?
+  address     String?
+  notes       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  products    Product[]
+  orders      Order[]
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  name        String
+  category    String?
+  unit        String    @default("pcs") // pcs, kg, g, L, etc.
+  sku         String?
+  description String?
+  imageUrl    String?
+  price       Float     @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  supplierId  String
+  supplier    Supplier  @relation(fields: [supplierId], references: [id])
+  
+  orderItems  OrderItem[]
+  inventory   Inventory[]
+}
+
+model Order {
+  id          String    @id @default(cuid())
+  orderNumber String    @unique
+  status      OrderStatus @default(PENDING)
+  totalAmount Float     @default(0)
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  supplierId  String
+  supplier    Supplier  @relation(fields: [supplierId], references: [id])
+  
+  items       OrderItem[]
+  
+  // WhatsApp integration
+  whatsappMessageId String?
+  whatsappStatus    String?
+}
+
+model OrderItem {
+  id          String    @id @default(cuid())
+  quantity    Int       @default(1)
+  unitPrice   Float     @default(0)
+  totalPrice  Float     @default(0)
+  
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+}
+
+model Inventory {
+  id          String    @id @default(cuid())
+  quantity    Int       @default(0)
+  minStock    Int       @default(0)
+  maxStock    Int       @default(100)
+  location    String?   // storage location
+  lastRestock DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  productId   String    @unique
+  product     Product   @relation(fields: [productId], references: [id])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  parentId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String
+  oldValue    Json?
+  newValue    Json?
+  userId      String?
+  createdAt   DateTime  @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
