@@ -41,7 +41,7 @@ const statusLabels: Record<string, { en: string; zh: string }> = {
 };
 
 export default function OrdersPage() {
-  const { lang, t } = useTheme();
+  const { lang } = useTheme() as { lang: "en" | "zh" };
   const [orders] = useState<Order[]>(mockOrders);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

@@ -32,7 +32,6 @@ export default function InventoryPage() {
   const [search, setSearch] = useState("");
   const [expiryFilter, setExpiryFilter] = useState("all");
 
-  const getText = (en: string, zh: string) => (lang === 'zh' ? zh : en);
 
   const filteredInventory = inventory.filter((item) => {
     const matchesSearch =
@@ -109,9 +108,9 @@ export default function InventoryPage() {
   ];
 
   const getStockStatus = (item: InventoryItem) => {
-    if (item.quantity <= item.minStock) return { label: getText("Low", "低"), color: "bg-red-100 text-red-700" };
-    if (item.quantity >= item.maxStock) return { label: getText("Overstock", "過多"), color: "bg-yellow-100 text-yellow-700" };
-    return { label: getText("Healthy", "正常"), color: "bg-emerald-100 text-emerald-700" };
+    if (item.quantity <= item.minStock) return { label: t.$1), color: "bg-red-100 text-red-700" };
+    if (item.quantity >= item.maxStock) return { label: t.$1), color: "bg-yellow-100 text-yellow-700" };
+    return { label: t.$1), color: "bg-emerald-100 text-emerald-700" };
   };
 
   const getExpiryStatus = (expiryDate: string) => {
@@ -121,29 +120,29 @@ export default function InventoryPage() {
     
     if (daysUntilExpiry <= 0) {
       return { 
-        label: getText("Expired", "已過期"), 
+        label: t.$1), 
         color: "bg-red-100 text-red-700",
-        days: getText("Expired", "已過期")
+        days: t.$1)
       };
     }
     if (daysUntilExpiry <= 7) {
       return { 
-        label: getText("Expiring Soon", "即將過期"), 
+        label: t.$1), 
         color: "bg-yellow-100 text-yellow-700",
-        days: `${daysUntilExpiry}${getText(" days", "天")}`
+        days: `${daysUntilExpiry}${t.$1)}`
       };
     }
     return { 
-      label: getText("OK", "正常"), 
+      label: t.$1), 
       color: "bg-emerald-100 text-emerald-700",
-      days: `${daysUntilExpiry}${getText(" days", "天")}`
+      days: `${daysUntilExpiry}${t.$1)}`
     };
   };
 
   const getStockPercentage = (item: InventoryItem) => Math.min((item.quantity / item.maxStock) * 100, 100);
 
   const handleExport = () => {
-    alert(getText("Exporting inventory data...", "正在導出庫存數據..."));
+    alert(t.$1);
   };
 
   return (
@@ -160,11 +159,11 @@ export default function InventoryPage() {
             className="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2"
           >
             <Download size={20} />
-            {getText("Export", "導出")}
+            {t.$1)}
           </button>
           <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2">
             <Plus size={20} />
-            {getText("Add Item", "新增")}
+            {t.$1)}
           </button>
         </div>
       </div>
@@ -191,7 +190,7 @@ export default function InventoryPage() {
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <h3 className="font-semibold text-red-700 flex items-center gap-2">
             <AlertTriangle size={20} />
-            {getText("Low Stock Alert -", "低庫存警報 - ")}{lowStockItems.length}{getText(" items need restocking", "項物品需要補貨")}
+            {t.$1)}
           </h3>
           <div className="mt-2 flex flex-wrap gap-2">
             {lowStockItems.map((item) => (
@@ -208,12 +207,12 @@ export default function InventoryPage() {
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
           <h3 className="font-semibold text-yellow-700 flex items-center gap-2">
             <Calendar size={20} />
-            {getText("Expiry Alerts", "過期警報")}
+            {t.$1)}
           </h3>
           <div className="mt-2 flex flex-wrap gap-2">
             {expiredItems.map((item) => (
               <span key={item.id} className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm flex items-center gap-1">
-                ❌ {item.product} - {getText("Expired", "已過期")}
+                ❌ {item.product} - {t.$1)}
               </span>
             ))}
             {warningItems.map((item) => {
@@ -222,7 +221,7 @@ export default function InventoryPage() {
               );
               return (
                 <span key={item.id} className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm flex items-center gap-1">
-                  ⚠️ {item.product} - {daysUntilExpiry}{getText(" days left", "天")}
+                  ⚠️ {item.product} - {daysUntilExpiry}{t.$1)}
                 </span>
               );
             })}
@@ -236,7 +235,7 @@ export default function InventoryPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder={getText("Search products...", "搜尋產品...")}
+            placeholder={t.$1)}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
@@ -247,10 +246,10 @@ export default function InventoryPage() {
           onChange={(e) => setExpiryFilter(e.target.value)}
           className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
         >
-          <option value="all">{getText("All Expiry", "全部")}</option>
-          <option value="ok">{getText("OK (7+ days)", "正常 (7天+)")}</option>
-          <option value="warning">{getText("Expiring Soon (<7 days)", "即將過期 (<7天)")}</option>
-          <option value="expired">{getText("Expired", "已過期")}</option>
+          <option value="all">{t.$1)}</option>
+          <option value="ok">{t.$1)}</option>
+          <option value="warning">{t.$1)}</option>
+          <option value="expired">{t.$1)}</option>
         </select>
       </div>
 
@@ -294,7 +293,7 @@ export default function InventoryPage() {
               </div>
 
               <div className="mt-4 pt-4 border-t flex justify-between text-sm text-gray-500">
-                <span>{getText("Min:", "最低:")} {item.minStock}</span>
+                <span>{t.$1)} {item.minStock}</span>
                 <span className="flex items-center gap-1">
                   <Calendar size={14} />
                   {item.expiryDate}
@@ -307,7 +306,7 @@ export default function InventoryPage() {
 
       {filteredInventory.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          {getText("No items found", "沒有找到物品")}
+          {t.$1)}
         </div>
       )}
     </div>

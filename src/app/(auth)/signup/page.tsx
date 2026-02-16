@@ -42,7 +42,6 @@ function SignupForm() {
     }
   };
 
-  const getText = (en: string, zh: string) => (lang === 'zh' ? zh : en);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -55,7 +54,7 @@ function SignupForm() {
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-emerald-600">🍽️ Open Purchase</h1>
-          <p className="text-gray-500 mt-2">{getText("Create your account", "創建您的帳戶")}</p>
+          <p className="text-gray-500 mt-2">{t.$1)}</p>
         </div>
 
         {/* Signup Form */}
@@ -109,7 +108,7 @@ function SignupForm() {
                 required
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {getText("Minimum 8 characters", "最少8個字符")}
+                {t.$1)}
               </p>
             </div>
 
@@ -118,13 +117,13 @@ function SignupForm() {
               disabled={loading}
               className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium rounded-lg text-white"
             >
-              {loading ? getText("Creating account...", "創建帳戶中...") : getText("Create Account", "創建帳戶")}
+              {loading ? t.$1)}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-500 dark:text-gray-400">
-              {getText("Already have an account?", "已經有帳戶？")}{" "}
+              {t.$1)}{" "}
               <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-medium">
                 {t.auth.signIn}
               </Link>
@@ -134,10 +133,10 @@ function SignupForm() {
 
         {/* Terms */}
         <p className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
-          {getText("By creating an account, you agree to our", "創建帳戶即表示您同意我們的")}{" "}
-          <a href="#" className="text-emerald-600 hover:underline">{getText("Terms of Service", "服務條款")}</a>
-          {" "}{getText("and", "和")}{" "}
-          <a href="#" className="text-emerald-600 hover:underline">{getText("Privacy Policy", "隱私政策")}</a>
+          {t.$1)}{" "}
+          <a href="#" className="text-emerald-600 hover:underline">{t.$1)}</a>
+          {" "}{t.$1)}{" "}
+          <a href="#" className="text-emerald-600 hover:underline">{t.$1)}</a>
         </p>
       </div>
     </div>

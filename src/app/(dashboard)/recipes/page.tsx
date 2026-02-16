@@ -96,7 +96,6 @@ export default function RecipesPage() {
       r.category.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getText = (en: string, zh: string) => (lang === 'zh' ? zh : en);
 
   return (
     <div className="space-y-6">
@@ -104,10 +103,10 @@ export default function RecipesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {getText("Recipe Costing", "食譜成本")}
+            {t.$1)}
           </h1>
           <p className="text-gray-500">
-            {getText("Calculate menu costs and profit margins", "計算菜單成本和利潤率")}
+            {t.$1)}
           </p>
         </div>
         <button
@@ -118,7 +117,7 @@ export default function RecipesPage() {
           className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2"
         >
           <Plus size={20} />
-          {getText("Add Recipe", "新增食譜")}
+          {t.$1)}
         </button>
       </div>
 
@@ -127,7 +126,7 @@ export default function RecipesPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
         <input
           type="text"
-          placeholder={getText("Search recipes...", "搜尋食譜...")}
+          placeholder={t.$1)}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
@@ -139,14 +138,14 @@ export default function RecipesPage() {
         <div className="bg-white rounded-xl p-4 shadow-sm border">
           <div className="flex items-center gap-2">
             <Calculator className="text-emerald-500" size={20} />
-            <span className="text-gray-500 text-sm">{getText("Total Recipes", "食譜總數")}</span>
+            <span className="text-gray-500 text-sm">{t.$1)}</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mt-2">{recipes.length}</h3>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm border">
           <div className="flex items-center gap-2">
             <DollarSign className="text-blue-500" size={20} />
-            <span className="text-gray-500 text-sm">{getText("Avg Margin", "平均利潤率")}</span>
+            <span className="text-gray-500 text-sm">{t.$1)}</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mt-2">
             {Math.round(recipes.reduce((acc, r) => acc + r.profitMargin, 0) / recipes.length)}%
@@ -155,7 +154,7 @@ export default function RecipesPage() {
         <div className="bg-white rounded-xl p-4 shadow-sm border">
           <div className="flex items-center gap-2">
             <DollarSign className="text-green-500" size={20} />
-            <span className="text-gray-500 text-sm">{getText("Avg Cost", "平均成本")}</span>
+            <span className="text-gray-500 text-sm">{t.$1)}</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mt-2">
             ${Math.round(recipes.reduce((acc, r) => acc + r.totalCost, 0) / recipes.length)}
@@ -164,7 +163,7 @@ export default function RecipesPage() {
         <div className="bg-white rounded-xl p-4 shadow-sm border">
           <div className="flex items-center gap-2">
             <DollarSign className="text-purple-500" size={20} />
-            <span className="text-gray-500 text-sm">{getText("Avg Price", "平均價格")}</span>
+            <span className="text-gray-500 text-sm">{t.$1)}</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mt-2">
             ${Math.round(recipes.reduce((acc, r) => acc + r.menuPrice, 0) / recipes.length)}
@@ -200,7 +199,7 @@ export default function RecipesPage() {
                   </button>
                   <button
                     onClick={() => {
-                      if (confirm(getText("Delete this recipe?", "刪除此食譜？"))) {
+                      if (confirm(t.$1) {
                         setRecipes(recipes.filter((r) => r.id !== recipe.id));
                       }
                     }}
@@ -213,15 +212,15 @@ export default function RecipesPage() {
 
               <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-xs text-gray-500">{getText("Cost", "成本")}</p>
+                  <p className="text-xs text-gray-500">{t.$1)}</p>
                   <p className="font-semibold text-gray-900">${recipe.totalCost}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">{getText("Price", "價格")}</p>
+                  <p className="text-xs text-gray-500">{t.$1)}</p>
                   <p className="font-semibold text-emerald-600">${recipe.menuPrice}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">{getText("Margin", "利潤")}</p>
+                  <p className="text-xs text-gray-500">{t.$1)}</p>
                   <p className={`font-semibold ${recipe.profitMargin > 50 ? 'text-green-600' : 'text-yellow-600'}`}>
                     {recipe.profitMargin.toFixed(1)}%
                   </p>
@@ -229,7 +228,7 @@ export default function RecipesPage() {
               </div>
 
               <div className="mt-4">
-                <p className="text-xs text-gray-500 mb-2">{getText("Ingredients", "材料")}</p>
+                <p className="text-xs text-gray-500 mb-2">{t.$1)}</p>
                 <div className="space-y-1">
                   {recipe.ingredients.slice(0, 3).map((ing, idx) => (
                     <div key={idx} className="flex justify-between text-sm">
@@ -239,7 +238,7 @@ export default function RecipesPage() {
                   ))}
                   {recipe.ingredients.length > 3 && (
                     <p className="text-xs text-emerald-600 mt-2">
-                      +{recipe.ingredients.length - 3} {getText("more items", "項材料")}
+                      +{recipe.ingredients.length - 3} {t.$1)}
                     </p>
                   )}
                 </div>
@@ -255,7 +254,7 @@ export default function RecipesPage() {
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white">
               <h2 className="text-xl font-bold text-gray-900">
-                {selectedRecipe ? getText("Edit Recipe", "編輯食譜") : getText("New Recipe", "新增食譜")}
+                {selectedRecipe ? t.$1)}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -268,7 +267,7 @@ export default function RecipesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {getText("Recipe Name", "食譜名稱")}
+                    {t.$1)}
                   </label>
                   <input
                     type="text"
@@ -278,16 +277,16 @@ export default function RecipesPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {getText("Category", "類別")}
+                    {t.$1)}
                   </label>
                   <select
                     defaultValue={selectedRecipe?.category}
                     className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
                   >
-                    <option value="Main Course">{getText("Main Course", "主菜")}</option>
-                    <option value="Healthy">{getText("Healthy", "健康")}</option>
-                    <option value="Dessert">{getText("Dessert", "甜品")}</option>
-                    <option value="Beverage">{getText("Beverage", "飲品")}</option>
+                    <option value="Main Course">{t.$1)}</option>
+                    <option value="Healthy">{t.$1)}</option>
+                    <option value="Dessert">{t.$1)}</option>
+                    <option value="Beverage">{t.$1)}</option>
                   </select>
                 </div>
               </div>
@@ -295,7 +294,7 @@ export default function RecipesPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {getText("Servings", "份量")}
+                    {t.$1)}
                   </label>
                   <input
                     type="number"
@@ -305,7 +304,7 @@ export default function RecipesPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {getText("Menu Price", "菜單價格")}
+                    {t.$1)}
                   </label>
                   <input
                     type="number"
@@ -315,7 +314,7 @@ export default function RecipesPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {getText("Total Cost", "總成本")}
+                    {t.$1)}
                   </label>
                   <input
                     type="number"
@@ -328,7 +327,7 @@ export default function RecipesPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {getText("Ingredients", "材料")}
+                  {t.$1)}
                 </label>
                 <div className="border rounded-lg p-4 space-y-2 bg-gray-50">
                   {selectedRecipe?.ingredients.map((ing, idx) => (
@@ -336,31 +335,31 @@ export default function RecipesPage() {
                       <input
                         type="text"
                         defaultValue={ing.name}
-                        placeholder={getText("Ingredient name", "材料名稱")}
+                        placeholder={t.$1)}
                         className="flex-1 px-3 py-2 border rounded-lg text-sm text-gray-900"
                       />
                       <input
                         type="number"
                         defaultValue={ing.quantity}
-                        placeholder={getText("Qty", "數量")}
+                        placeholder={t.$1)}
                         className="w-20 px-3 py-2 border rounded-lg text-sm text-gray-900"
                       />
                       <input
                         type="text"
                         defaultValue={ing.unit}
-                        placeholder={getText("Unit", "單位")}
+                        placeholder={t.$1)}
                         className="w-16 px-3 py-2 border rounded-lg text-sm text-gray-900"
                       />
                       <input
                         type="number"
                         defaultValue={ing.unitPrice}
-                        placeholder={getText("Price", "價格")}
+                        placeholder={t.$1)}
                         className="w-24 px-3 py-2 border rounded-lg text-sm text-gray-900"
                       />
                     </div>
                   ))}
                   <button className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-emerald-500 hover:text-emerald-600 text-sm">
-                    + {getText("Add Ingredient", "新增材料")}
+                    + {t.$1)}
                   </button>
                 </div>
               </div>
@@ -370,10 +369,10 @@ export default function RecipesPage() {
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 border rounded-lg hover:bg-gray-50"
               >
-                {getText("Cancel", "取消")}
+                {t.$1)}
               </button>
               <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-                {getText("Save Recipe", "儲存食譜")}
+                {t.$1)}
               </button>
             </div>
           </div>

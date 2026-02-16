@@ -41,7 +41,6 @@ function LoginForm() {
     }
   };
 
-  const getText = (en: string, zh: string) => (lang === 'zh' ? zh : en);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -54,7 +53,7 @@ function LoginForm() {
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-emerald-600">🍽️ Open Purchase</h1>
-          <p className="text-gray-500 mt-2">{getText("Sign in to your account", "登入您的帳戶")}</p>
+          <p className="text-gray-500 mt-2">{t.$1)}</p>
         </div>
 
         {/* Login Form */}
@@ -99,13 +98,13 @@ function LoginForm() {
               disabled={loading}
               className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium rounded-lg text-white"
             >
-              {loading ? getText("Signing in...", "登入中...") : t.auth.login}
+              {loading ? t.$1) : t.auth.login}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-500 dark:text-gray-400">
-              {getText("Don't have an account?", "還沒有帳戶？")}{" "}
+              {t.$1)}{" "}
               <Link href="/signup" className="text-emerald-600 hover:text-emerald-700 font-medium">
                 {t.auth.signUp}
               </Link>
@@ -115,7 +114,7 @@ function LoginForm() {
 
         {/* Demo Credentials */}
         <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-          <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium mb-2">🎉 {getText("Demo Mode Available!", "演示模式可用！")}</p>
+          <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium mb-2">🎉 {t.$1)}</p>
           <p className="text-xs text-emerald-600 dark:text-emerald-500">
             {t.auth.email}: <code className="bg-emerald-100 dark:bg-emerald-900 px-1 rounded">demo@example.com</code>
           </p>

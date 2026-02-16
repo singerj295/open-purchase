@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Sun, Moon, Globe } from "lucide-react";
+import { translations } from "./translations";
 
 type Lang = "en" | "zh";
 
@@ -10,6 +10,7 @@ interface ThemeState {
   lang: Lang;
   toggleDark: () => void;
   setLang: (lang: Lang) => void;
+  t: typeof translations.en;
 }
 
 function createThemeContext(defaultDark: boolean, defaultLang: Lang) {
@@ -30,10 +31,14 @@ function createThemeContext(defaultDark: boolean, defaultLang: Lang) {
       
       if (savedDark === "true") {
         setDark(true);
-        document.documentElement.classList.add("dark");
+        if (typeof document !== "undefined") {
+          document.documentElement.classList.add("dark");
+        }
       } else if (savedDark === "false") {
         setDark(false);
-        document.documentElement.classList.remove("dark");
+        if (typeof document !== "undefined") {
+          document.documentElement.classList.remove("dark");
+        }
       }
       
       if (savedLang === "en" || savedLang === "zh") {
@@ -44,13 +49,14 @@ function createThemeContext(defaultDark: boolean, defaultLang: Lang) {
     const toggleDark = useCallback(() => {
       setDark((prev) => {
         const newDark = !prev;
-        if (newDark) {
-          document.documentElement.classList.add("dark");
-          localStorage.setItem("open-purchase-dark", "true");
-        } else {
-          document.documentElement.classList.remove("dark");
-          localStorage.setItem("open-purchase-dark", "false");
+        if (typeof document !== "undefined") {
+          if (newDark) {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
         }
+        localStorage.setItem("open-purchase-dark", newDark ? "true" : "false");
         return newDark;
       });
     }, []);
@@ -60,17 +66,27 @@ function createThemeContext(defaultDark: boolean, defaultLang: Lang) {
       localStorage.setItem("open-purchase-lang", newLang);
     }, []);
 
+    const t = lang === "zh" ? translations.zh : translations.en;
+
+    const contextValue: ThemeState = {
+      dark,
+      lang,
+      toggleDark,
+      setLang,
+      t,
+    };
+
     // Prevent flash of wrong theme
     if (!mounted) {
       return (
-        <ThemeContext.Provider value={{ dark: defaultDark, lang: defaultLang, toggleDark: () => {}, setLang: () => {} }}>
+        <ThemeContext.Provider value={{ dark: defaultDark, lang: defaultLang, toggleDark: () => {}, setLang: () => {}, t: defaultLang === "zh" ? translations.zh : translations.en }}>
           {children}
         </ThemeContext.Provider>
       );
     }
 
     return (
-      <ThemeContext.Provider value={{ dark, lang, toggleDark, setLang }}>
+      <ThemeContext.Provider value={contextValue}>
         {children}
       </ThemeContext.Provider>
     );
@@ -90,23 +106,5 @@ function createThemeContext(defaultDark: boolean, defaultLang: Lang) {
 const { ThemeProvider, useTheme } = createThemeContext(false, "zh");
 
 export { ThemeProvider, useTheme };
-
-// Export translations for use in components
-export const translations = {
-  en: {
-    darkMode: "Dark Mode",
-    lightMode: "Light Mode",
-    language: "Language",
-    chinese: "中文",
-    english: "English",
-  },
-  zh: {
-    darkMode: "深色模式",
-    lightMode: "淺色模式",
-    language: "語言",
-    chinese: "中文",
-    english: "English",
-  },
-};
-
+export { translations };
 export type { Lang };
