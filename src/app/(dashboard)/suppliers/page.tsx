@@ -105,8 +105,10 @@ export default function SuppliersPage() {
         ...newSupplier,
         isActive: true,
       };
-      setSuppliers([...suppliers, supplier]);
-      localStorage.setItem('open-purchase-suppliers', JSON.stringify([...suppliers, supplier]));
+      // Save new suppliers to variable first (to avoid stale state)
+      const newSuppliers = [...suppliers, supplier];
+      setSuppliers(newSuppliers);
+      localStorage.setItem('open-purchase-suppliers', JSON.stringify(newSuppliers));
       setShowModal(false);
       setNewSupplier({ name: "", contact: "", phone: "", email: "", address: "", deliveryDay: "", moq: "", category: "", notes: "" });
     }

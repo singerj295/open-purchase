@@ -49,7 +49,8 @@ interface User {
 }
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]); // Start empty for all users
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [suppliers, setSuppliers] = useState<{id: string, name: string}[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [lang, setLang] = useState<"en" | "zh">("zh");
@@ -89,6 +90,16 @@ export default function OrdersPage() {
       }
     }
 
+    // Load suppliers from localStorage
+    const savedSuppliers = localStorage.getItem('open-purchase-suppliers');
+    if (savedSuppliers) {
+      try {
+        setSuppliers(JSON.parse(savedSuppliers));
+      } catch (e) {
+        setSuppliers([]);
+      }
+    }
+
     // Listen for storage changes
     const handleStorageChange = () => {
       const savedOrders = localStorage.getItem('open-purchase-orders');
@@ -97,6 +108,15 @@ export default function OrdersPage() {
           setOrders(JSON.parse(savedOrders));
         } catch (e) {
           setOrders([]);
+        }
+      }
+      
+      const savedSuppliers = localStorage.getItem('open-purchase-suppliers');
+      if (savedSuppliers) {
+        try {
+          setSuppliers(JSON.parse(savedSuppliers));
+        } catch (e) {
+          setSuppliers([]);
         }
       }
     };
@@ -108,9 +128,11 @@ export default function OrdersPage() {
   const isZh = lang === "zh";
   const isBlankUser = user?.email === "eldon@chta.one" || user?.name === "";
 
-  // Products and suppliers list for order form
+  // Products list for order form
   const products = ["Tomatoes", "Salmon", "Olive Oil", "Chicken Breast", "Pasta", "Fresh Basil", "Mixed Herbs", "Sea Bass"];
-  const supplierList = ["Fresh Farm Co", "Ocean Seafood", "Kitchen Supplies Ltd", "Spice World"];
+  
+  // Dynamic supplier names from localStorage
+  const supplierNames = suppliers.map(s => s.name);
 
   const handleAddOrder = () => {
     if (newOrder.supplier && newOrder.product && newOrder.items && newOrder.total) {
@@ -124,8 +146,9 @@ export default function OrdersPage() {
         status: "pending",
         date: new Date().toISOString().split('T')[0],
       };
-      setOrders([order, ...orders]);
-      localStorage.setItem('open-purchase-orders', JSON.stringify([order, ...orders]));
+      const newOrders = [order, ...orders];
+      setOrders(newOrders);
+      localStorage.setItem('open-purchase-orders', JSON.stringify(newOrders));
       setShowModal(false);
       setNewOrder({ supplier: "", product: "", items: "", total: "" });
     }
@@ -350,7 +373,11 @@ export default function OrdersPage() {
                   style={{ width: '100%' }}
                 >
                   <option value="">{isZh ? "選擇供應商" : "Select supplier"}</option>
-                  {supplierList.map(s => <option key={s} value={s}>{s}</option>)}
+                  {supplierNames.length > 0 ? (
+                    supplierNames.map(s => <option key={s} value={s}>{s}</option>)
+                  ) : (
+                    <option value="" disabled>{isZh ? "請先添加供應商" : "Add suppliers first"}</option>
+                  )}
                 </select>
               </div>
               
