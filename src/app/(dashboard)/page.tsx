@@ -2,7 +2,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { ArrowUpRight, ArrowDownRight, Package, ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
-import { useTheme } from "@/lib/i18n/LanguageContext";
+import { useTheme } from "@/lib/i18n/ThemeContext";
 
 const stats = [
   {
