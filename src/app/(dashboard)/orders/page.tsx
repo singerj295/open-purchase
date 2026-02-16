@@ -267,6 +267,7 @@ export default function OrdersPage() {
                         </button>
                         <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
                           <Edit size={16} />
+                        </button>
                         <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444' }}>
                           <Trash2 size={16} />
                         </button>
