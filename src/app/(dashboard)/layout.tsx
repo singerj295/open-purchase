@@ -13,7 +13,7 @@ import {
   Bell,
   Search,
 } from "lucide-react";
-import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { LanguageProvider, useLanguage } from "@/lib/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 function DashboardLayoutInner({
