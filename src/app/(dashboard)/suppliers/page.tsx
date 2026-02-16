@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin, X } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin, X, Truck, Box } from "lucide-react";
 
 interface Supplier {
   id: string;
@@ -10,15 +10,21 @@ interface Supplier {
   phone: string;
   email: string;
   address: string;
+  deliveryDay: string;
+  moq: string;
+  category: string;
+  notes: string;
   isActive: boolean;
 }
 
 const mockSuppliers: Supplier[] = [
-  { id: "1", name: "Fresh Farm Co", contact: "John Smith", phone: "+852 1234 5678", email: "john@freshfarm.com", address: "123 Farm Road, NT", isActive: true },
-  { id: "2", name: "Ocean Seafood", contact: "Mary Chan", phone: "+852 2345 6789", email: "mary@ocean.com", address: "456 Aberdeen Market", isActive: true },
-  { id: "3", name: "Kitchen Supplies Ltd", contact: "David Wong", phone: "+852 3456 7890", email: "david@kitchen.com", address: "789 Kwai Chung", isActive: true },
-  { id: "4", name: "Spice World", contact: "Lisa Lau", phone: "+852 4567 8901", email: "lisa@spice.com", address: "321 Mong Kok", isActive: false },
+  { id: "1", name: "Fresh Farm Co", contact: "John Smith", phone: "+852 1234 5678", email: "john@freshfarm.com", address: "123 Farm Road, NT", deliveryDay: "Mon,Wed,Fri", moq: "500", category: "Vegetables", notes: "Fresh produce", isActive: true },
+  { id: "2", name: "Ocean Seafood", contact: "Mary Chan", phone: "+852 2345 6789", email: "mary@ocean.com", address: "456 Aberdeen Market", deliveryDay: "Tue,Thu,Sat", moq: "300", category: "Seafood", notes: "Fresh catch daily", isActive: true },
+  { id: "3", name: "Kitchen Supplies Ltd", contact: "David Wong", phone: "+852 3456 7890", email: "david@kitchen.com", address: "789 Kwai Chung", deliveryDay: "Mon,Fri", moq: "1000", category: "Dry Goods", notes: "Bulk orders", isActive: true },
+  { id: "4", name: "Spice World", contact: "Lisa Lau", phone: "+852 4567 8901", email: "lisa@spice.com", address: "321 Mong Kok", deliveryDay: "Wed", moq: "200", category: "Spices", notes: "Import spices", isActive: false },
 ];
+
+const categories = ["Vegetables", "Seafood", "Meat", "Dry Goods", "Spices", "Oils", "Beverages", "Equipment", "Other"];
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
@@ -31,6 +37,10 @@ export default function SuppliersPage() {
     phone: "",
     email: "",
     address: "",
+    deliveryDay: "",
+    moq: "",
+    category: "",
+    notes: "",
   });
 
   const isZh = lang === "zh";
@@ -44,14 +54,15 @@ export default function SuppliersPage() {
       };
       setSuppliers([...suppliers, supplier]);
       setShowModal(false);
-      setNewSupplier({ name: "", contact: "", phone: "", email: "", address: "" });
+      setNewSupplier({ name: "", contact: "", phone: "", email: "", address: "", deliveryDay: "", moq: "", category: "", notes: "" });
     }
   };
 
   const filteredSuppliers = suppliers.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.contact.toLowerCase().includes(search.toLowerCase())
+      s.contact.toLowerCase().includes(search.toLowerCase()) ||
+      s.category.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -102,14 +113,14 @@ export default function SuppliersPage() {
         </div>
         <div className="stat-card">
           <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0, color: 'var(--muted)' }}>
-            {suppliers.filter((s) => !s.isActive).length}
+            {new Set(suppliers.map(s => s.category)).size}
           </h3>
-          <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "暫停供應商" : "Inactive Suppliers"}</p>
+          <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "類別數量" : "Categories"}</p>
         </div>
       </div>
 
       {/* Suppliers Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px' }}>
         {filteredSuppliers.map((supplier) => (
           <div key={supplier.id} className="card" style={{ padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -125,6 +136,14 @@ export default function SuppliersPage() {
               </span>
             </div>
 
+            {/* Category */}
+            <div style={{ marginTop: '12px' }}>
+              <span className="badge" style={{ background: 'rgba(45, 158, 109, 0.15)', color: 'var(--primary)' }}>
+                {supplier.category}
+              </span>
+            </div>
+
+            {/* Contact Info */}
             <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)', fontSize: '14px' }}>
                 <Phone size={14} />{supplier.phone}
@@ -137,6 +156,30 @@ export default function SuppliersPage() {
               </div>
             </div>
 
+            {/* Delivery & MOQ */}
+            <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ padding: '12px', background: 'var(--background)', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--muted)', fontSize: '12px', marginBottom: '4px' }}>
+                  <Truck size={14} />{isZh ? "車期" : "Delivery"}
+                </div>
+                <p style={{ fontSize: '14px', fontWeight: '500', margin: 0 }}>{supplier.deliveryDay || "-"}</p>
+              </div>
+              <div style={{ padding: '12px', background: 'var(--background)', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--muted)', fontSize: '12px', marginBottom: '4px' }}>
+                  <Box size={14} />{isZh ? "最低訂量" : "MOQ"}
+                </div>
+                <p style={{ fontSize: '14px', fontWeight: '500', margin: 0 }}>{supplier.moq ? `$${supplier.moq}` : "-"}</p>
+              </div>
+            </div>
+
+            {/* Notes */}
+            {supplier.notes && (
+              <p style={{ marginTop: '12px', fontSize: '13px', color: 'var(--muted)', fontStyle: 'italic' }}>
+                "{supplier.notes}"
+              </p>
+            )}
+
+            {/* Actions */}
             <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
               <button className="btn-secondary" style={{ flex: 1 }}>
                 {isZh ? "聯絡" : "Contact"}
@@ -144,10 +187,7 @@ export default function SuppliersPage() {
               <button className="btn-secondary" style={{ padding: '10px' }}>
                 <Edit size={18} />
               </button>
-              <button
-                className="btn-secondary"
-                style={{ padding: '10px', color: '#ef4444' }}
-              >
+              <button className="btn-secondary" style={{ padding: '10px', color: '#ef4444' }}>
                 <Trash2 size={18} />
               </button>
             </div>
@@ -168,8 +208,10 @@ export default function SuppliersPage() {
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1000,
+          padding: '20px',
+          overflow: 'auto',
         }}>
-          <div className="card" style={{ width: '100%', maxWidth: '480px', padding: '32px' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '560px', padding: '32px', maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
                 {isZh ? "新增供應商" : "Add Supplier"}
@@ -180,62 +222,67 @@ export default function SuppliersPage() {
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "公司名稱" : "Company Name"}
-                </label>
-                <input
-                  type="text"
-                  value={newSupplier.name}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
-                  className="input"
-                  placeholder={isZh ? "輸入公司名稱" : "Enter company name"}
-                  style={{ width: '100%' }}
-                />
+              {/* Basic Info */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                    {isZh ? "公司名稱 *" : "Company Name *"}
+                  </label>
+                  <input
+                    type="text"
+                    value={newSupplier.name}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
+                    className="input"
+                    placeholder={isZh ? "輸入公司名稱" : "Enter company name"}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                    {isZh ? "聯絡人 *" : "Contact Person *"}
+                  </label>
+                  <input
+                    type="text"
+                    value={newSupplier.contact}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, contact: e.target.value })}
+                    className="input"
+                    placeholder={isZh ? "輸入聯絡人" : "Enter contact name"}
+                    style={{ width: '100%' }}
+                  />
+                </div>
               </div>
               
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "聯絡人" : "Contact Person"}
-                </label>
-                <input
-                  type="text"
-                  value={newSupplier.contact}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, contact: e.target.value })}
-                  className="input"
-                  placeholder={isZh ? "輸入聯絡人姓名" : "Enter contact name"}
-                  style={{ width: '100%' }}
-                />
+              {/* Contact */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                    {isZh ? "電話 *" : "Phone *"}
+                  </label>
+                  <input
+                    type="text"
+                    value={newSupplier.phone}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
+                    className="input"
+                    placeholder={isZh ? "輸入電話" : "Enter phone"}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                    {isZh ? "電郵 *" : "Email *"}
+                  </label>
+                  <input
+                    type="email"
+                    value={newSupplier.email}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, email: e.target.value })}
+                    className="input"
+                    placeholder={isZh ? "輸入電郵" : "Enter email"}
+                    style={{ width: '100%' }}
+                  />
+                </div>
               </div>
               
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "電話" : "Phone"}
-                </label>
-                <input
-                  type="text"
-                  value={newSupplier.phone}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
-                  className="input"
-                  placeholder={isZh ? "輸入電話號碼" : "Enter phone number"}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "電郵" : "Email"}
-                </label>
-                <input
-                  type="email"
-                  value={newSupplier.email}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, email: e.target.value })}
-                  className="input"
-                  placeholder={isZh ? "輸入電郵地址" : "Enter email address"}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              
+              {/* Address */}
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
                   {isZh ? "地址" : "Address"}
@@ -245,17 +292,75 @@ export default function SuppliersPage() {
                   value={newSupplier.address}
                   onChange={(e) => setNewSupplier({ ...newSupplier, address: e.target.value })}
                   className="input"
-                  placeholder={isZh ? "輸入公司地址" : "Enter company address"}
+                  placeholder={isZh ? "輸入地址" : "Enter address"}
                   style={{ width: '100%' }}
                 />
               </div>
               
+              {/* Category & MOQ */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                    {isZh ? "類別" : "Category"}
+                  </label>
+                  <select
+                    value={newSupplier.category}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, category: e.target.value })}
+                    className="input"
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">{isZh ? "選擇類別" : "Select category"}</option>
+                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                    {isZh ? "最低訂量 (MOQ)" : "Minimum Order Qty"}
+                  </label>
+                  <input
+                    type="text"
+                    value={newSupplier.moq}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, moq: e.target.value })}
+                    className="input"
+                    placeholder={isZh ? "輸入MOQ" : "Enter MOQ"}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
+              
+              {/* Delivery */}
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "送貨日子 (車期)" : "Delivery Days"}
+                </label>
+                <input
+                  type="text"
+                  value={newSupplier.deliveryDay}
+                  onChange={(e) => setNewSupplier({ ...newSupplier, deliveryDay: e.target.value })}
+                  className="input"
+                  placeholder={isZh ? "如：Mon,Wed,Fri" : "e.g., Mon,Wed,Fri"}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              {/* Notes */}
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
+                  {isZh ? "備註" : "Notes"}
+                </label>
+                <textarea
+                  value={newSupplier.notes}
+                  onChange={(e) => setNewSupplier({ ...newSupplier, notes: e.target.value })}
+                  className="input"
+                  placeholder={isZh ? "輸入備註" : "Enter notes"}
+                  rows={3}
+                  style={{ width: '100%', resize: 'vertical' }}
+                />
+              </div>
+              
+              {/* Buttons */}
               <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="btn-secondary"
-                  style={{ flex: 1 }}
-                >
+                <button onClick={() => setShowModal(false)} className="btn-secondary" style={{ flex: 1 }}>
                   {isZh ? "取消" : "Cancel"}
                 </button>
                 <button
