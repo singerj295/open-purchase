@@ -39,6 +39,7 @@ export default function SuppliersPage() {
   const [search, setSearch] = useState("");
   const [lang, setLang] = useState<"en" | "zh">("zh");
   const [showModal, setShowModal] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [newSupplier, setNewSupplier] = useState({
     name: "",
     contact: "",
@@ -101,15 +102,24 @@ export default function SuppliersPage() {
   const handleAddSupplier = () => {
     if (newSupplier.name && newSupplier.contact && newSupplier.phone && newSupplier.email) {
       const supplier: Supplier = {
-        id: String(suppliers.length + 1),
+        id: editingSupplier ? editingSupplier.id : String(Date.now()),
         ...newSupplier,
         isActive: true,
       };
-      // Save new suppliers to variable first (to avoid stale state)
-      const newSuppliers = [...suppliers, supplier];
+      
+      let newSuppliers: Supplier[];
+      if (editingSupplier) {
+        // Update existing supplier
+        newSuppliers = suppliers.map(s => s.id === editingSupplier.id ? supplier : s);
+      } else {
+        // Add new supplier
+        newSuppliers = [...suppliers, supplier];
+      }
+      
       setSuppliers(newSuppliers);
       localStorage.setItem('open-purchase-suppliers', JSON.stringify(newSuppliers));
       setShowModal(false);
+      setEditingSupplier(null);
       setNewSupplier({ name: "", contact: "", phone: "", email: "", address: "", deliveryDay: "", moq: "", category: "", notes: "" });
     }
   };
@@ -121,6 +131,24 @@ export default function SuppliersPage() {
       localStorage.setItem('open-purchase-suppliers', JSON.stringify(updated));
     }
   };
+
+  const handleEditSupplier = (supplier: Supplier) => {
+    setEditingSupplier(supplier);
+    setNewSupplier({
+      name: supplier.name,
+      contact: supplier.contact,
+      phone: supplier.phone,
+      email: supplier.email,
+      address: supplier.address,
+      deliveryDay: supplier.deliveryDay,
+      moq: supplier.moq,
+      category: supplier.category,
+      notes: supplier.notes,
+    });
+    setShowModal(true);
+  };
+
+  const handleSaveSupplier = () => {
 
   const filteredSuppliers = suppliers.filter(
     (s) =>
@@ -144,7 +172,11 @@ export default function SuppliersPage() {
         <button
           className="btn-primary"
           style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            setEditingSupplier(null);
+            setNewSupplier({ name: "", contact: "", phone: "", email: "", address: "", deliveryDay: "", moq: "", category: "", notes: "" });
+            setShowModal(true);
+          }}
         >
           <Plus size={18} />
           {isZh ? "新增供應商" : "Add Supplier"}
@@ -282,7 +314,7 @@ export default function SuppliersPage() {
               <button className="btn-secondary" style={{ flex: 1 }}>
                 {isZh ? "聯絡" : "Contact"}
               </button>
-              <button className="btn-secondary" style={{ padding: '10px' }}>
+              <button className="btn-secondary" style={{ padding: '10px' }} onClick={() => handleEditSupplier(supplier)}>
                 <Edit size={18} />
               </button>
               <button className="btn-secondary" style={{ padding: '10px', color: '#ef4444' }} onClick={() => handleDeleteSupplier(supplier.id)}>
@@ -313,7 +345,9 @@ export default function SuppliersPage() {
           <div className="card" style={{ width: '100%', maxWidth: '560px', padding: '32px', maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
-                {isZh ? "新增供應商" : "Add Supplier"}
+                {editingSupplier 
+                  ? (isZh ? "編輯供應商" : "Edit Supplier")
+                  : (isZh ? "新增供應商" : "Add Supplier")}
               </h2>
               <button onClick={() => setShowModal(false)} style={{ padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
                 <X size={20} />
@@ -468,7 +502,9 @@ export default function SuppliersPage() {
                   style={{ flex: 1 }}
                   disabled={!newSupplier.name || !newSupplier.contact || !newSupplier.phone || !newSupplier.email}
                 >
-                  {isZh ? "創建供應商" : "Create Supplier"}
+                  {editingSupplier 
+                    ? (isZh ? "更新供應商" : "Update Supplier")
+                    : (isZh ? "創建供應商" : "Create Supplier")}
                 </button>
               </div>
             </div>
