@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createRateLimitedHandler } from "@/lib/rate-limit";
 
 // Mock data for demo
 const inventory = [
@@ -9,7 +10,7 @@ const inventory = [
   { id: "5", productId: "5", quantity: 500, minStock: 200, maxStock: 1000, location: "Spice Rack" },
 ];
 
-export async function GET() {
+async function handleGET(request: Request) {
   return NextResponse.json({
     success: true,
     data: inventory,
@@ -17,7 +18,7 @@ export async function GET() {
   });
 }
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   try {
     const body = await request.json();
     const newInventory = {
@@ -38,3 +39,6 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const GET = createRateLimitedHandler(handleGET);
+export const POST = createRateLimitedHandler(handlePOST);

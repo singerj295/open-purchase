@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createRateLimitedHandler } from "@/lib/rate-limit";
 
 // AI Cost Analysis & Recommendations
 // Uses MiniMax (primary) or Claude (fallback)
@@ -23,7 +24,7 @@ interface AnalysisResult {
   aiProvider: string
 }
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json()
     const { type, data } = body
@@ -200,8 +201,7 @@ async function handleDemandForecast(data: { product: string; history: number[] }
   })
 }
 
-// GET for health check
-export async function GET() {
+async function handleGET() {
   return NextResponse.json({
     service: 'AI Analysis Service',
     status: 'active',
@@ -214,3 +214,6 @@ export async function GET() {
     ],
   })
 }
+
+export const GET = createRateLimitedHandler(handleGET, { sensitiveEndpoint: true });
+export const POST = createRateLimitedHandler(handlePOST, { sensitiveEndpoint: true });

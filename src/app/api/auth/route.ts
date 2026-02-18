@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createRateLimitedHandler } from "@/lib/rate-limit";
 
 // Mock user for demo mode when Supabase is not configured
 const mockUsers: Record<string, { id: string; email: string; name: string; password: string }> = {
@@ -10,7 +11,7 @@ const mockUsers: Record<string, { id: string; email: string; name: string; passw
   },
 };
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   try {
     const { action, email, password, name } = await request.json();
 
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
           if (mockUsers[email]) {
             return NextResponse.json(
               { success: false, error: 'User already exists' },
-              { status: 400 }
+              { status: 400, headers: { 'X-Request-ID': Date.now().toString() } }
             );
           }
           mockUsers[email] = {
@@ -44,14 +45,14 @@ export async function POST(request: Request) {
               session: { user: mockUsers[email] },
             },
             message: 'Demo mode: Account created (not persistent)',
-          });
+          }, { headers: { 'X-Request-ID': Date.now().toString() } });
 
         case 'signin':
           const user = mockUsers[email];
           if (!user || user.password !== password) {
             return NextResponse.json(
               { success: false, error: 'Invalid credentials' },
-              { status: 401 }
+              { status: 401, headers: { 'X-Request-ID': Date.now().toString() } }
             );
           }
           return NextResponse.json({
@@ -60,13 +61,13 @@ export async function POST(request: Request) {
               user: { id: user.id, email, name: user.name },
               session: { user },
             },
-          });
+          }, { headers: { 'X-Request-ID': Date.now().toString() } });
 
         case 'signout':
           return NextResponse.json({
             success: true,
             message: 'Signed out successfully (demo mode)',
-          });
+          }, { headers: { 'X-Request-ID': Date.now().toString() } });
 
         case 'session':
           return NextResponse.json({
@@ -132,3 +133,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = createRateLimitedHandler(handlePOST, { sensitiveEndpoint: true });

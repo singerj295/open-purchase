@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { whatsappService } from '@/lib/whatsapp/service';
+import { createRateLimitedHandler } from "@/lib/rate-limit";
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   try {
     const body = await request.json();
     const { orderNumber, supplierName, supplierPhone, items, totalAmount, notes } = body;
@@ -35,3 +36,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = createRateLimitedHandler(handlePOST);

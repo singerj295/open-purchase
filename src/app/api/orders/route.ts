@@ -1,4 +1,35 @@
 import { NextResponse } from "next/server";
+import { createRateLimitedHandler } from "@/lib/rate-limit";
+import { z } from "zod";
+
+// Zod validation schema for order data
+const orderSchema = z.object({
+  supplierId: z.string().min(1, "供應商 ID 為必填項"),
+  items: z.array(z.object({
+    productId: z.string().min(1, "商品 ID 為必填項"),
+    quantity: z.number().int().positive("數量必須為正整數"),
+    unitPrice: z.number().nonnegative("單價必須為非負數"),
+  })).min(1, "至少需要一個商品"),
+  notes: z.string().optional(),
+});
+
+// Validate order input
+function validateOrder(data: unknown) {
+  const result = orderSchema.safeParse(data);
+  if (!result.success) {
+    // Zod 4: error.message contains JSON string of errors
+    const errorData = JSON.parse(result.error.message);
+    const errors = Array.isArray(errorData) ? errorData : [];
+    return {
+      valid: false,
+      errors: errors.map((err: any) => ({
+        field: err.path?.join(".") || "",
+        message: err.message,
+      })),
+    };
+  }
+  return { valid: true, data: result.data };
+}
 
 // Mock data for demo
 const orders = [
@@ -9,7 +40,7 @@ const orders = [
   { id: "5", orderNumber: "ORD-005", supplierId: "4", status: "DELIVERED", totalAmount: 180, createdAt: new Date().toISOString() },
 ];
 
-export async function GET() {
+async function handleGET(request: Request) {
   return NextResponse.json({
     success: true,
     data: orders,
@@ -17,13 +48,33 @@ export async function GET() {
   });
 }
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   try {
     const body = await request.json();
+    
+    // Validate input
+    const validation = validateOrder(body);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { success: false, error: "驗證失敗", details: validation.errors },
+        { status: 400 }
+      );
+    }
+
+    // TypeScript doesn't know validation.data exists here, so we need to cast it
+    const validatedData = validation.data!;
+    const totalAmount = validatedData.items.reduce(
+      (sum, item) => sum + item.quantity * item.unitPrice, 
+      0
+    );
+    
     const newOrder = {
       id: String(orders.length + 1),
       orderNumber: `ORD-${String(orders.length + 1).padStart(3, "0")}`,
-      ...body,
+      supplierId: validatedData.supplierId,
+      items: validatedData.items,
+      totalAmount,
+      notes: validatedData.notes || "",
       status: "PENDING",
       createdAt: new Date().toISOString(),
     };
@@ -41,3 +92,6 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const GET = createRateLimitedHandler(handleGET);
+export const POST = createRateLimitedHandler(handlePOST);
