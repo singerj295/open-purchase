@@ -17,7 +17,12 @@ import axios from 'axios';
 
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY || '';
 const QWEN_MODEL = 'qwen3.5-plus';
+
+// 阿里雲百煉 API Endpoint
 const QWEN_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+
+// 如果係阿里雲百煉，可以用呢個 Endpoint
+// const BAILIAN_URL = 'https://bailian.aliyuncs.com/openapi/v1/apps/{appId}/completions';
 
 // ============================================
 // Qwen Vision Analyzer
