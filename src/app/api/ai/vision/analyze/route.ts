@@ -111,70 +111,82 @@ const PROMPTS = {
 }
 
 // ============================================
-// 調用 Qwen3.5-Plus (通過 OpenClaw)
+// 調用 Qwen3.5-Plus (通過 OpenClaw sessions_spawn)
 // ============================================
 
 /**
  * 調用 Qwen3.5-Plus 分析圖片
  * 
- * 注意：呢個函數需要 OpenClaw sessions_spawn 支持
- * 喺 OpenClaw 環境運行先可以用到
+ * 用 OpenClaw 內置嘅 sessions_spawn
+ * 自動用配置好嘅 API Key
  */
 async function callQwenVision(
   imageUrl: string,
   prompt: string
 ): Promise<string> {
   try {
-    // 方法 1: 用 sessions_spawn (OpenClaw 內置)
-    // const { sessions_spawn } = await import('openclaw/sessions')
-    // const result = await sessions_spawn({
-    //   agentId: 'main',
-    //   model: QWEN_MODEL,
-    //   task: `請分析呢幅圖片：${imageUrl}\n\n${prompt}`,
-    //   timeoutSeconds: TIMEOUT_SECONDS
-    // })
-    // return result.response
-
-    // 方法 2: 直接調用 API (需要 API Key)
-    // 注意：呢個方法需要正確嘅 API Key
-    const API_KEY = process.env.DASHSCOPE_API_KEY
+    // 用 sessions_spawn 調用 (OpenClaw 內置)
+    // 注意：sessions_spawn 需要喺 OpenClaw 環境運行
+    const { sessions_spawn } = await import('openclaw/sessions')
     
-    if (!API_KEY) {
-      throw new Error('DASHSCOPE_API_KEY 未設置')
-    }
-
-    const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'qwen3.5-plus',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'image_url', image_url: { url: imageUrl } },
-              { type: 'text', text: prompt }
-            ]
-          }
-        ],
-        max_tokens: 2048
-      })
+    const result = await sessions_spawn({
+      agentId: 'main',
+      model: 'bailian/qwen3.5-plus',
+      task: `請分析呢幅圖片：${imageUrl}\n\n${prompt}`,
+      timeoutSeconds: TIMEOUT_SECONDS
     })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error?.message || 'API 請求失敗')
-    }
-
-    const data = await response.json()
-    return data.choices[0].message.content
+    
+    return result.response
   } catch (error) {
-    console.error('Qwen Vision API Error:', error)
-    throw error
+    console.error('sessions_spawn Error:', error)
+    
+    // 如果 sessions_spawn 失敗，嘗試直接調用 API (後備方案)
+    console.log('嘗試後備方案：直接調用 API...')
+    return callQwenVisionDirect(imageUrl, prompt)
   }
+}
+
+/**
+ * 後備方案：直接調用 API
+ */
+async function callQwenVisionDirect(
+  imageUrl: string,
+  prompt: string
+): Promise<string> {
+  const API_KEY = process.env.DASHSCOPE_API_KEY
+  
+  if (!API_KEY) {
+    throw new Error('DASHSCOPE_API_KEY 未設置，且 sessions_spawn 失敗')
+  }
+
+  const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'qwen3.5-plus',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: imageUrl } },
+            { type: 'text', text: prompt }
+          ]
+        }
+      ],
+      max_tokens: 2048
+    })
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error?.message || 'API 請求失敗')
+  }
+
+  const data = await response.json()
+  return data.choices[0].message.content
 }
 
 // ============================================
