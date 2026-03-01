@@ -7,6 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Supplier {
@@ -14,7 +15,7 @@ model Supplier {
   name        String
   contact     String?
   phone       String?
-  email       String?   @db.VarChar(255)
+  email       String?
   address     String?
   notes       String?
   isActive    Boolean   @default(true)
@@ -23,16 +24,13 @@ model Supplier {
   
   products    Product[]
   orders      Order[]
-  
-  @@index([email])
-  @@index([isActive])
 }
 
 model Product {
   id          String    @id @default(cuid())
   name        String
   category    String?
-  unit        String    @default("pcs")
+  unit        String    @default("pcs") // pcs, kg, g, L, etc.
   sku         String?
   description String?
   imageUrl    String?
@@ -46,37 +44,25 @@ model Product {
   
   orderItems  OrderItem[]
   inventory   Inventory[]
-  
-  @@index([category])
-  @@index([isActive])
-  @@index([supplierId])
-  @@index([supplierId, isActive])
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  orderNumber String      @unique
+  id          String    @id @default(cuid())
+  orderNumber String    @unique
   status      OrderStatus @default(PENDING)
-  totalAmount Float       @default(0)
+  totalAmount Float     @default(0)
   notes       String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   
   supplierId  String
-  supplier    Supplier    @relation(fields: [supplierId], references: [id])
+  supplier    Supplier  @relation(fields: [supplierId], references: [id])
   
   items       OrderItem[]
   
   // WhatsApp integration
   whatsappMessageId String?
   whatsappStatus    String?
-  
-  @@index([status])
-  @@index([createdAt])
-  @@index([supplierId])
-  @@index([supplierId, status])
-  @@index([status, createdAt])
-  @@index([whatsappStatus])
 }
 
 model OrderItem {
@@ -90,10 +76,6 @@ model OrderItem {
   
   productId   String
   product     Product   @relation(fields: [productId], references: [id])
-  
-  @@index([orderId])
-  @@index([productId])
-  @@index([orderId, productId])
 }
 
 model Inventory {
@@ -101,16 +83,13 @@ model Inventory {
   quantity    Int       @default(0)
   minStock    Int       @default(0)
   maxStock    Int       @default(100)
-  location    String?
+  location    String?   // storage location
   lastRestock DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   
   productId   String    @unique
   product     Product   @relation(fields: [productId], references: [id])
-  
-  @@index([quantity])
-  @@index([productId])
 }
 
 model Category {
@@ -120,8 +99,6 @@ model Category {
   parentId    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  
-  @@index([parentId])
 }
 
 model AuditLog {
@@ -133,11 +110,6 @@ model AuditLog {
   newValue    Json?
   userId      String?
   createdAt   DateTime  @default(now())
-  
-  @@index([entityType])
-  @@index([entityId])
-  @@index([createdAt])
-  @@index([entityType, entityId])
 }
 
 enum OrderStatus {
