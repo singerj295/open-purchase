@@ -7,10 +7,10 @@ const nextConfig: NextConfig = {
         // 匹配所有路由
         source: "/:path*",
         headers: [
-          // CORS headers - 允許的來源
+          // CORS headers - 允許所有來源 (開發用)
           {
             key: "Access-Control-Allow-Origin",
-            value: "https://your-trusted-domain.com",
+            value: "*",
           },
           // CORS  headers - 允許的方法
           {
