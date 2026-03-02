@@ -111,52 +111,23 @@ const PROMPTS = {
 }
 
 // ============================================
-// 調用 Qwen3.5-Plus (通過 OpenClaw sessions_spawn)
+// 調用 Qwen3.5-Plus (直接 API 調用)
 // ============================================
 
 /**
  * 調用 Qwen3.5-Plus 分析圖片
  * 
- * 用 OpenClaw 內置嘅 sessions_spawn
- * 自動用配置好嘅 API Key
+ * 直接調用 DashScope API
+ * 唔使依賴 OpenClaw
  */
 async function callQwenVision(
-  imageUrl: string,
-  prompt: string
-): Promise<string> {
-  try {
-    // 用 sessions_spawn 調用 (OpenClaw 內置)
-    // 注意：sessions_spawn 需要喺 OpenClaw 環境運行
-    const { sessions_spawn } = await import('openclaw/sessions')
-    
-    const result = await sessions_spawn({
-      agentId: 'main',
-      model: 'bailian/qwen3.5-plus',
-      task: `請分析呢幅圖片：${imageUrl}\n\n${prompt}`,
-      timeoutSeconds: TIMEOUT_SECONDS
-    })
-    
-    return result.response
-  } catch (error) {
-    console.error('sessions_spawn Error:', error)
-    
-    // 如果 sessions_spawn 失敗，嘗試直接調用 API (後備方案)
-    console.log('嘗試後備方案：直接調用 API...')
-    return callQwenVisionDirect(imageUrl, prompt)
-  }
-}
-
-/**
- * 後備方案：直接調用 API
- */
-async function callQwenVisionDirect(
   imageUrl: string,
   prompt: string
 ): Promise<string> {
   const API_KEY = process.env.DASHSCOPE_API_KEY
   
   if (!API_KEY) {
-    throw new Error('DASHSCOPE_API_KEY 未設置，且 sessions_spawn 失敗')
+    throw new Error('DASHSCOPE_API_KEY 未設置')
   }
 
   const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
