@@ -231,7 +231,7 @@ export async function checkLowInventory() {
           name
         )
       `)
-      .lte('quantity', supabaseAdmin.rpc.raw('minStock'));
+      .lte('quantity', 'minStock');
 
     if (items && items.length > 0) {
       for (const item of items) {
@@ -270,7 +270,7 @@ export async function sendDailySummary() {
     const { count: lowStockCount } = await supabaseAdmin
       .from('Inventory')
       .select('*', { count: 'exact', head: true })
-      .lte('quantity', supabaseAdmin.rpc.raw('minStock'));
+      .lte('quantity', 'minStock');
 
     await telegramBot.sendDailySummary({
       orders: ordersCount || 0,
