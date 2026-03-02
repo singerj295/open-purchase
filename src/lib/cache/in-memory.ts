@@ -35,7 +35,9 @@ class CacheService {
     if (this.cache.size >= this.config.maxSize) {
       // 刪除最舊嘅項目
       const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
+      if (firstKey) {
+        this.cache.delete(firstKey);
+      }
     }
 
     const expiry = Date.now() + (ttl || this.config.defaultTTL) * 1000;
