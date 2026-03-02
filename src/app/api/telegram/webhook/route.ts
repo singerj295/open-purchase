@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server'
+
 /**
  * Telegram Bot Service
  * 
@@ -12,8 +14,23 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_SUMMER_BOT_TOKEN || process.env.
 const WEBHOOK_URL = process.env.WEBHOOK_URL || 'https://your-domain.com/api/telegram/webhook'
 
 // ============================================
-// Webhook 設置 (一次性)
+// GET Handler (Telegram Webhook 測試用)
 // ============================================
+
+export async function GET() {
+  return NextResponse.json({
+    ok: true,
+    message: 'Summer Bot Webhook 正常運作',
+    bot: 'Summerdatabot',
+    username: '@Summerdatabot'
+  })
+}
+
+// ============================================
+// POST Handler (處理 Telegram 消息)
+// ============================================
+
+// Webhook 設置 (一次性)
 
 async function setWebhook() {
   const response = await fetch(
@@ -234,3 +251,6 @@ async function setupBotCommands() {
 // ============================================
 
 export { handlePhoto, handleDocument, handleText, sendMessage, setWebhook, setupBotCommands }
+
+// Export POST handler for Vercel
+export { POST }
