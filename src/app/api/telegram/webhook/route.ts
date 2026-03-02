@@ -204,7 +204,7 @@ export async function POST(request: Request) {
 // 設置命令 (一次性運行)
 // ============================================
 
-export async function setupBotCommands() {
+async function setupBotCommands() {
   const commands = [
     { command: 'start', description: '開始使用' },
     { command: 'status', description: '查看狀態' },
