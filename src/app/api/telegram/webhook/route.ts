@@ -3,9 +3,12 @@
  * 
  * 自動處理 Telegram 消息
  * 支持：圖片、文字、文件
+ * 
+ * 使用 Summer Bot (@Summerdatabot) 作為數據輸入 Bot
  */
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
+// 使用 Summer Bot Token (數據輸入專責)
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_SUMMER_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN
 const WEBHOOK_URL = process.env.WEBHOOK_URL || 'https://your-domain.com/api/telegram/webhook'
 
 // ============================================
