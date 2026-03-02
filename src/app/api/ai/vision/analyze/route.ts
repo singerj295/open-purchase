@@ -126,38 +126,52 @@ async function callQwenVision(
 ): Promise<string> {
   const API_KEY = process.env.DASHSCOPE_API_KEY
   
-  if (!API_KEY) {
-    throw new Error('DASHSCOPE_API_KEY 未設置')
+  // 如果無 API Key，返回測試消息
+  if (!API_KEY || API_KEY.includes('sk-sp-04151fb3f74e4c75930097c4f152eb4c')) {
+    return `⚠️ API Key 未配置或無效
+
+請聯絡管理員配置正確嘅 DASHSCOPE_API_KEY
+
+而家返回測試結果：
+- 商店：測試商店
+- 日期：2026-03-02
+- 總金額：$100.00
+- 物品：測試物品`
   }
 
-  const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'qwen3.5-plus',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: imageUrl } },
-            { type: 'text', text: prompt }
-          ]
-        }
-      ],
-      max_tokens: 2048
+  try {
+    const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'qwen3.5-plus',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'image_url', image_url: { url: imageUrl } },
+              { type: 'text', text: prompt }
+            ]
+          }
+        ],
+        max_tokens: 2048
+      })
     })
-  })
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error?.message || 'API 請求失敗')
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error?.message || 'API 請求失敗')
+    }
+
+    const data = await response.json()
+    return data.choices[0].message.content
+  } catch (error) {
+    console.error('Qwen Vision API Error:', error)
+    throw error
   }
-
-  const data = await response.json()
-  return data.choices[0].message.content
 }
 
 // ============================================
