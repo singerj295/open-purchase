@@ -1,344 +1,257 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Search, Eye, Edit, Trash2, X } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useTheme } from '@/lib/ThemeContext';
+import { Edit, Trash2, CheckCircle, Clock, Truck, XCircle, Plus, RefreshCw } from 'lucide-react';
+import OrderForm, { Order, OrderItem } from '@/components/orders/OrderForm';
 
-interface Order {
-  id: string;
-  orderNumber: string;
-  supplier: string;
-  product: string;
-  items: number;
-  total: number;
-  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
-  date: string;
-}
+// Status configuration
+const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+  PENDING: { label: '待處理', color: '#f59e0b', icon: Clock },
+  CONFIRMED: { label: '已確認', color: '#8b5cf6', icon: CheckCircle },
+  SHIPPED: { label: '已發貨', color: '#3b82f6', icon: Truck },
+  DELIVERED: { label: '已送達', color: '#4ade80', icon: CheckCircle },
+  CANCELLED: { label: '已取消', color: '#6b7280', icon: XCircle },
+};
 
+// Mock data for demo
 const mockOrders: Order[] = [
-  { id: "1", orderNumber: "ORD-001", supplier: "Fresh Farm Co", product: "Tomatoes", items: 12, total: 450, status: "delivered", date: "2026-02-15" },
-  { id: "2", orderNumber: "ORD-002", supplier: "Ocean Seafood", product: "Salmon", items: 8, total: 890, status: "shipped", date: "2026-02-15" },
-  { id: "3", orderNumber: "ORD-003", supplier: "Kitchen Supplies Ltd", product: "Olive Oil", items: 24, total: 320, status: "pending", date: "2026-02-16" },
-  { id: "4", orderNumber: "ORD-004", supplier: "Fresh Farm Co", product: "Chicken Breast", items: 15, total: 560, status: "confirmed", date: "2026-02-16" },
-  { id: "5", orderNumber: "ORD-005", supplier: "Spice World", product: "Mixed Herbs", items: 6, total: 180, status: "cancelled", date: "2026-02-14" },
-  { id: "6", orderNumber: "ORD-006", supplier: "Ocean Seafood", product: "Sea Bass", items: 10, total: 720, status: "pending", date: "2026-02-16" },
-  { id: "7", orderNumber: "ORD-007", supplier: "Fresh Farm Co", product: "Fresh Basil", items: 20, total: 380, status: "delivered", date: "2026-02-13" },
+  { id: '1', orderNumber: 'ORD-001', supplierId: 'sup-1', supplierName: 'Fresh Farm Co', status: 'DELIVERED', totalAmount: 450, items: [{ id: '1', productId: 'prod-1', productName: 'Tomatoes', quantity: 12, unitPrice: 10, totalPrice: 120 }, { id: '2', productId: 'prod-4', productName: 'Chicken Breast', quantity: 15, unitPrice: 12, totalPrice: 180 }], createdAt: new Date().toISOString() },
+  { id: '2', orderNumber: 'ORD-002', supplierId: 'sup-2', supplierName: 'Ocean Seafood', status: 'SHIPPED', totalAmount: 890, items: [{ id: '3', productId: 'prod-2', productName: 'Salmon', quantity: 8, unitPrice: 25, totalPrice: 200 }], createdAt: new Date().toISOString() },
+  { id: '3', orderNumber: 'ORD-003', supplierId: 'sup-3', supplierName: 'Kitchen Supplies Ltd', status: 'PENDING', totalAmount: 320, items: [{ id: '4', productId: 'prod-3', productName: 'Olive Oil', quantity: 24, unitPrice: 15, totalPrice: 360 }], createdAt: new Date().toISOString() },
+  { id: '4', orderNumber: 'ORD-004', supplierId: 'sup-1', supplierName: 'Fresh Farm Co', status: 'CONFIRMED', totalAmount: 560, items: [{ id: '5', productId: 'prod-4', productName: 'Chicken Breast', quantity: 15, unitPrice: 12, totalPrice: 180 }], createdAt: new Date().toISOString() },
+  { id: '5', orderNumber: 'ORD-005', supplierId: 'sup-4', supplierName: 'Spice World', status: 'CANCELLED', totalAmount: 180, items: [{ id: '6', productId: 'prod-5', productName: 'Mixed Herbs', quantity: 6, unitPrice: 8, totalPrice: 48 }], createdAt: new Date().toISOString() },
 ];
 
-const statusColors: Record<string, { bg: string; text: string }> = {
-  pending: { bg: "rgba(251, 191, 36, 0.15)", text: "#d97706" },
-  confirmed: { bg: "rgba(139, 92, 246, 0.15)", text: "#7c3aed" },
-  shipped: { bg: "rgba(59, 130, 246, 0.15)", text: "#2563eb" },
-  delivered: { bg: "rgba(16, 185, 129, 0.15)", text: "#059669" },
-  cancelled: { bg: "rgba(107, 114, 128, 0.15)", text: "#6b7280" },
-};
-
-const statusLabels: Record<string, { en: string; zh: string }> = {
-  pending: { en: "Pending", zh: "待處理" },
-  confirmed: { en: "Confirmed", zh: "已確認" },
-  shipped: { en: "Shipped", zh: "已發貨" },
-  delivered: { en: "Delivered", zh: "已送達" },
-  cancelled: { en: "Cancelled", zh: "已取消" },
-};
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  restaurantName: string;
-  restaurantAddress: string;
-}
-
 export default function OrdersPage() {
+  const { isDark } = useTheme();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [suppliers, setSuppliers] = useState<{id: string, name: string}[]>([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [lang, setLang] = useState<"en" | "zh">("zh");
-  const [showModal, setShowModal] = useState(false);
-  const [newOrder, setNewOrder] = useState({
-    supplier: "",
-    product: "",
-    items: "",
-    total: "",
-  });
-  const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  const [error, setError] = useState<string | null>(null);
+
+  const [suppliers] = useState([
+    { id: 'sup-1', name: 'Fresh Farm Co' },
+    { id: 'sup-2', name: 'Ocean Seafood' },
+    { id: 'sup-3', name: 'Kitchen Supplies Ltd' },
+    { id: 'sup-4', name: 'Spice World' },
+  ]);
+
+  const [products] = useState([
+    { id: 'prod-1', name: 'Tomatoes', price: 10 },
+    { id: 'prod-2', name: 'Salmon', price: 25 },
+    { id: 'prod-3', name: 'Olive Oil', price: 15 },
+    { id: 'prod-4', name: 'Chicken Breast', price: 12 },
+    { id: 'prod-5', name: 'Mixed Herbs', price: 8 },
+  ]);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setOrders(mockOrders);
+    } catch (err: any) {
+      setError('無法載入訂單');
+      setOrders(mockOrders);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("open-purchase-lang");
-    if (saved === "en" || saved === "zh") {
-      setLang(saved);
-    }
-    
-    const savedUser = localStorage.getItem('open-purchase-user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        setUser(null);
-      }
-    }
-
-    // Load orders from localStorage
-    const savedOrders = localStorage.getItem('open-purchase-orders');
-    if (savedOrders) {
-      try {
-        setOrders(JSON.parse(savedOrders));
-      } catch (e) {
-        setOrders([]);
-      }
-    }
-
-    // Load suppliers from localStorage
-    const savedSuppliers = localStorage.getItem('open-purchase-suppliers');
-    if (savedSuppliers) {
-      try {
-        setSuppliers(JSON.parse(savedSuppliers));
-      } catch (e) {
-        setSuppliers([]);
-      }
-    }
-
-    // Listen for storage changes
-    const handleStorageChange = () => {
-      const savedOrders = localStorage.getItem('open-purchase-orders');
-      if (savedOrders) {
-        try {
-          setOrders(JSON.parse(savedOrders));
-        } catch (e) {
-          setOrders([]);
-        }
-      }
-      
-      const savedSuppliers = localStorage.getItem('open-purchase-suppliers');
-      if (savedSuppliers) {
-        try {
-          setSuppliers(JSON.parse(savedSuppliers));
-        } catch (e) {
-          setSuppliers([]);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    fetchOrders();
   }, []);
 
-  const isZh = lang === "zh";
-  const isBlankUser = user?.email === "eldon@chta.one" || user?.name === "";
-
-  // Products list for order form
-  const products = ["Tomatoes", "Salmon", "Olive Oil", "Chicken Breast", "Pasta", "Fresh Basil", "Mixed Herbs", "Sea Bass"];
-  
-  // Dynamic supplier names from localStorage
-  const supplierNames = suppliers.map(s => s.name);
-
-  const handleAddOrder = () => {
-    if (newOrder.supplier && newOrder.product && newOrder.items && newOrder.total) {
-      const order: Order = {
-        id: String(orders.length + 1),
-        orderNumber: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
-        supplier: newOrder.supplier,
-        product: newOrder.product,
-        items: parseInt(newOrder.items),
-        total: parseFloat(newOrder.total),
-        status: "pending",
-        date: new Date().toISOString().split('T')[0],
-      };
-      const newOrders = [order, ...orders];
-      setOrders(newOrders);
-      localStorage.setItem('open-purchase-orders', JSON.stringify(newOrders));
-      setShowModal(false);
-      setNewOrder({ supplier: "", product: "", items: "", total: "" });
+  const handleSaveOrder = (newOrder: Order) => {
+    if (editingOrder) {
+      setOrders(orders.map(o => o.id === newOrder.id ? newOrder : o));
+    } else {
+      setOrders([newOrder, ...orders]);
     }
+    setShowForm(false);
+    setEditingOrder(null);
   };
 
-  const handleDeleteOrder = (id: string) => {
-    if (confirm(isZh ? "確定刪除此訂單？" : "Delete this order?")) {
-      const updated = orders.filter(o => o.id !== id);
-      setOrders(updated);
-      localStorage.setItem('open-purchase-orders', JSON.stringify(updated));
-    }
+  const handleDeleteOrder = async (orderId: string) => {
+    setOrders(orders.filter(o => o.id !== orderId));
+    setDeleteConfirm(null);
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
-      order.supplier.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const handleEditOrder = (order: Order) => {
+    setEditingOrder(order);
+    setShowForm(true);
+  };
 
-  const stats = [
-    { label: "Total Orders", labelZh: "總訂單", value: orders.length, color: "#3b82f6" },
-    { label: "Pending", labelZh: "待處理", value: orders.filter((o) => o.status === "pending").length, color: "#f97316" },
-    { label: "Delivered", labelZh: "已送達", value: orders.filter((o) => o.status === "delivered").length, color: "#10b981" },
-    { label: "Total Value", labelZh: "總額", value: `$${orders.reduce((sum, o) => sum + o.total, 0)}`, color: "#8b5cf6" },
-  ];
+  const getStatusIcon = (status: string) => {
+    const config = statusConfig[status];
+    if (!config) return null;
+    const Icon = config.icon;
+    return <Icon size={16} />;
+  };
 
-  if (!mounted) {
+  if (loading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>{isZh ? "訂單管理" : "Orders"}</h1>
-        </div>
+      <div style={{ background: isDark ? '#111827' : '#f5f5f5', minHeight: '100vh', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: isDark ? '#9ca3af' : '#757575', fontSize: '16px' }}>載入中...</div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div style={{ background: isDark ? '#111827' : '#f5f5f5', minHeight: '100vh', padding: '24px', transition: 'all 0.3s ease' }}>
+      {/* Page Header */}
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
-            {isZh ? "訂單管理" : "Orders"}
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>
+            訂單管理
           </h1>
-          <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>
-            {isZh ? "管理你的採購訂單" : "Manage your purchase orders"}
+          <p style={{ margin: 0, color: isDark ? '#9ca3af' : '#757575', fontSize: '14px', transition: 'color 0.3s ease' }}>
+            管理採購訂單同供應商
           </p>
         </div>
         <button
-          className="btn-primary"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            setEditingOrder(null);
+            setShowForm(true);
+          }}
+          style={{
+            padding: '12px 24px',
+            background: '#2d9e6d',
+            border: 'none',
+            borderRadius: '12px',
+            color: 'white',
+            fontWeight: '600',
+            fontSize: '14px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
         >
-          <Plus size={18} />
-          {isZh ? "新增訂單" : "New Order"}
+          <Plus size={20} /> 新增訂單
         </button>
       </div>
 
-      {/* Empty State for blank users */}
-      {isBlankUser ? (
-        <div style={{ 
-          background: 'var(--card-bg)', 
-          borderRadius: '16px', 
-          padding: '60px', 
-          boxShadow: '0 2px 8px var(--shadow)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
-          <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
-            {isZh ? "還沒有訂單" : "No Orders Yet"}
-          </h2>
-          <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
-            {isZh ? "添加供應商後就可以建立訂單" : "Add suppliers to create orders"}
-          </p>
-          <a 
-            href="/suppliers"
-            style={{
-              display: 'inline-flex',
-              padding: '12px 24px',
-              background: 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              textDecoration: 'none',
-            }}
-          >
-            {isZh ? "添加供應商" : "Add Supplier"}
-          </a>
+      {/* Stats Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '20px',
+        marginBottom: '24px'
+      }}>
+        <div style={{ padding: '20px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <p style={{ margin: '0 0 8px 0', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', transition: 'color 0.3s ease' }}>總訂單</p>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>{orders.length}</p>
         </div>
-      ) : (
-        <>
-          {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-            {stats.map((stat) => (
-              <div key={stat.label} className="stat-card">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{isZh ? stat.labelZh : stat.label}</p>
-                    <p style={{ fontSize: '24px', fontWeight: '600', margin: '8px 0 0 0' }}>{stat.value}</p>
-                  </div>
-                  <div style={{ padding: '10px', borderRadius: '12px', background: `${stat.color}15` }}>
-                    <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: stat.color }} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div style={{ padding: '20px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <p style={{ margin: '0 0 8px 0', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', transition: 'color 0.3s ease' }}>待處理</p>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{orders.filter(o => o.status === 'PENDING').length}</p>
+        </div>
+        <div style={{ padding: '20px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <p style={{ margin: '0 0 8px 0', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', transition: 'color 0.3s ease' }}>已送達</p>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: '#2d9e6d' }}>{orders.filter(o => o.status === 'DELIVERED').length}</p>
+        </div>
+        <div style={{ padding: '20px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <p style={{ margin: '0 0 8px 0', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', transition: 'color 0.3s ease' }}>總額</p>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: '#8b5cf6' }}>${orders.reduce((sum, o) => sum + o.totalAmount, 0).toLocaleString()}</p>
+        </div>
+      </div>
 
-          {/* Filters */}
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-              <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} size={18} />
-              <input
-                type="text"
-                placeholder={isZh ? "搜尋訂單..." : "Search orders..."}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="search-input"
-              />
-            </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="input"
-              style={{ width: '150px' }}
-            >
-              <option value="all">{isZh ? "全部狀態" : "All Status"}</option>
-              <option value="pending">{isZh ? "待處理" : "Pending"}</option>
-              <option value="confirmed">{isZh ? "已確認" : "Confirmed"}</option>
-              <option value="shipped">{isZh ? "已發貨" : "Shipped"}</option>
-              <option value="delivered">{isZh ? "已送達" : "Delivered"}</option>
-              <option value="cancelled">{isZh ? "已取消" : "Cancelled"}</option>
-            </select>
-          </div>
-
-          {/* Orders Table */}
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>{isZh ? "訂單編號" : "Order #"}</th>
-                  <th>{isZh ? "產品" : "Product"}</th>
-                  <th>{isZh ? "供應商" : "Supplier"}</th>
-                  <th>{isZh ? "數量" : "Qty"}</th>
-                  <th>{isZh ? "總額" : "Total"}</th>
-                  <th>{isZh ? "狀態" : "Status"}</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td style={{ fontWeight: '600', color: 'var(--primary)' }}>{order.orderNumber}</td>
-                    <td>{order.product}</td>
-                    <td>{order.supplier}</td>
-                    <td>{order.items}</td>
-                    <td style={{ fontWeight: '500' }}>${order.total}</td>
-                    <td>
-                      <span className="badge" style={{ background: statusColors[order.status].bg, color: statusColors[order.status].text }}>
-                        {isZh ? statusLabels[order.status].zh : statusLabels[order.status].en}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
-                          <Eye size={16} />
-                        </button>
-                        <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
-                          <Edit size={16} />
-                        </button>
-                        <button style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444' }} onClick={() => handleDeleteOrder(order.id)}>
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
+      {/* Error Message */}
+      {error && (
+        <div style={{
+          padding: '16px',
+          background: isDark ? '#450a0a' : '#fef2f2',
+          border: '1px solid ' + (isDark ? '#7f1d1d' : '#fecaca'),
+          borderRadius: '12px',
+          color: '#f87171',
+          marginBottom: '24px',
+          transition: 'all 0.3s ease'
+        }}>
+          {error}
+        </div>
       )}
 
-      {/* Modal */}
-      {showModal && (
+      {/* Orders Table */}
+      <div style={{ background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', overflow: 'hidden', transition: 'all 0.3s ease' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid ' + (isDark ? '#374151' : '#f5f5f5') }}>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>訂單編號</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>供應商</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>狀態</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>金額</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>日期</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => {
+              const config = statusConfig[order.status];
+              const Icon = config?.icon || Clock;
+              return (
+                <tr key={order.id} style={{ borderBottom: '1px solid ' + (isDark ? '#374151' : '#f5f5f5'), transition: 'border-color 0.3s ease' }}>
+                  <td style={{ padding: '16px', color: '#2d9e6d', fontSize: '14px', fontWeight: '600' }}>{order.orderNumber}</td>
+                  <td style={{ padding: '16px', color: isDark ? '#f9fafb' : '#1a1a1a', fontSize: '14px', fontWeight: '600', transition: 'color 0.3s ease' }}>{order.supplierName}</td>
+                  <td style={{ padding: '16px' }}>
+                    <span style={{
+                      padding: '4px 12px',
+                      background: (config?.color || '#6b7280') + '20',
+                      color: config?.color || '#6b7280',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      <Icon size={14} />
+                      {config?.label || order.status}
+                    </span>
+                  </td>
+                  <td style={{ padding: '16px', color: isDark ? '#f9fafb' : '#1a1a1a', fontSize: '14px', fontWeight: '600', transition: 'color 0.3s ease' }}>${order.totalAmount.toLocaleString()}</td>
+                  <td style={{ padding: '16px', color: isDark ? '#9ca3af' : '#757575', fontSize: '14px', transition: 'color 0.3s ease' }}>{new Date(order.createdAt!).toLocaleDateString('zh-HK')}</td>
+                  <td style={{ padding: '16px' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => handleEditOrder(order)}
+                        style={{ padding: '6px 12px', background: isDark ? '#374151' : '#f5f5f5', border: 'none', borderRadius: '8px', color: isDark ? '#9ca3af' : '#757575', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', transition: 'all 0.3s ease' }}
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirm(order.id)}
+                        style={{ padding: '6px 12px', background: isDark ? '#374151' : '#f5f5f5', border: 'none', borderRadius: '8px', color: '#ef4444', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', transition: 'all 0.3s ease' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Order Form Modal */}
+      {showForm && (
+        <OrderForm
+          order={editingOrder}
+          onClose={() => {
+            setShowForm(false);
+            setEditingOrder(null);
+          }}
+          onSave={handleSaveOrder}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -349,98 +262,30 @@ export default function OrdersPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000,
+          zIndex: 1000
         }}>
-          <div className="card" style={{ width: '100%', maxWidth: '480px', padding: '32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
-                {isZh ? "新增訂單" : "New Order"}
-              </h2>
-              <button onClick={() => setShowModal(false)} style={{ padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
-                <X size={20} />
+          <div style={{
+            background: isDark ? '#1f2937' : 'white',
+            padding: '32px',
+            borderRadius: '16px',
+            maxWidth: '400px',
+            width: '100%'
+          }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 16px 0', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>確認刪除</h3>
+            <p style={{ color: isDark ? '#9ca3af' : '#757575', margin: '0 0 24px 0', transition: 'color 0.3s ease' }}>你係咪想刪除此訂單？</p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                style={{ padding: '10px 20px', background: isDark ? '#374151' : '#f5f5f5', border: 'none', borderRadius: '12px', color: isDark ? '#9ca3af' : '#757575', cursor: 'pointer', fontWeight: '600', transition: 'all 0.3s ease' }}
+              >
+                取消
               </button>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "供應商" : "Supplier"}
-                </label>
-                <select
-                  value={newOrder.supplier}
-                  onChange={(e) => setNewOrder({ ...newOrder, supplier: e.target.value })}
-                  className="input"
-                  style={{ width: '100%' }}
-                >
-                  <option value="">{isZh ? "選擇供應商" : "Select supplier"}</option>
-                  {supplierNames.length > 0 ? (
-                    supplierNames.map(s => <option key={s} value={s}>{s}</option>)
-                  ) : (
-                    <option value="" disabled>{isZh ? "請先添加供應商" : "Add suppliers first"}</option>
-                  )}
-                </select>
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "產品" : "Product"}
-                </label>
-                <select
-                  value={newOrder.product}
-                  onChange={(e) => setNewOrder({ ...newOrder, product: e.target.value })}
-                  className="input"
-                  style={{ width: '100%' }}
-                >
-                  <option value="">{isZh ? "選擇產品" : "Select product"}</option>
-                  {products.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "項目數量" : "Number of Items"}
-                </label>
-                <input
-                  type="number"
-                  value={newOrder.items}
-                  onChange={(e) => setNewOrder({ ...newOrder, items: e.target.value })}
-                  className="input"
-                  placeholder={isZh ? "輸入數量" : "Enter quantity"}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "總額 ($)" : "Total ($)"}
-                </label>
-                <input
-                  type="number"
-                  value={newOrder.total}
-                  onChange={(e) => setNewOrder({ ...newOrder, total: e.target.value })}
-                  className="input"
-                  placeholder={isZh ? "輸入金額" : "Enter amount"}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              
-              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="btn-secondary"
-                  style={{ flex: 1 }}
-                >
-                  {isZh ? "取消" : "Cancel"}
-                </button>
-                <button
-                  onClick={handleAddOrder}
-                  className="btn-primary"
-                  style={{ flex: 1 }}
-                  disabled={!newOrder.supplier || !newOrder.product || !newOrder.items || !newOrder.total}
-                >
-                  {isZh ? "創建訂單" : "Create Order"}
-                </button>
-              </div>
+              <button
+                onClick={() => handleDeleteOrder(deleteConfirm)}
+                style={{ padding: '10px 20px', background: '#ef4444', border: 'none', borderRadius: '12px', color: 'white', cursor: 'pointer', fontWeight: '600', transition: 'all 0.3s ease' }}
+              >
+                刪除
+              </button>
             </div>
           </div>
         </div>

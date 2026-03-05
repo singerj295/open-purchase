@@ -1,376 +1,292 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import {
-  LayoutDashboard,
-  ShoppingCart,
-  Package,
-  BarChart3,
-  Users,
-  Settings,
-  Calculator,
-  FileText,
-  ChevronLeft,
-  Menu,
-  Search,
-  LogOut,
-  User,
-  Building,
-} from "lucide-react";
-import { useTheme } from "@/lib/i18n/ThemeContext";
-import ThemeSwitcher from "@/components/ThemeSwitcher";
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { 
+  LayoutDashboard, ShoppingCart, Store, Book, Package, 
+  FileText, BarChart3, Settings, ChevronLeft, ChevronRight,
+  Search, User, LogOut, Moon, Sun
+} from 'lucide-react';
+import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
+import GlobalSearch from '@/components/GlobalSearch';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  restaurantName: string;
-  restaurantAddress: string;
-}
+const menuItems = [
+  { name: '儀表板', icon: LayoutDashboard, path: '/dashboard' },
+  { name: '訂單', icon: ShoppingCart, path: '/dashboard/orders' },
+  { name: '供應商', icon: Store, path: '/dashboard/suppliers' },
+  { name: '食譜', icon: Book, path: '/dashboard/recipes' },
+  { name: '庫存', icon: Package, path: '/dashboard/inventory' },
+  { name: '報告', icon: FileText, path: '/dashboard/reports' },
+  { name: '分析', icon: BarChart3, path: '/dashboard/analytics' },
+  { name: '設定', icon: Settings, path: '/dashboard/settings' },
+];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <DashboardLayoutInner>{children}</DashboardLayoutInner>;
-}
-
-function DashboardLayoutInner({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const router = useRouter();
-  const theme = useTheme();
-  const { lang } = theme as { lang: "en" | "zh" };
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    // Read user from localStorage synchronously on mount
-    const savedUser = localStorage.getItem('open-purchase-user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        localStorage.removeItem('open-purchase-user');
-      }
-    }
-  }, []);
-
-  // Auth check - redirect to login if not authenticated (only on client, after mount)
-  useEffect(() => {
-    if (mounted && !user) {
-      // Check one more time
-      const savedUser = localStorage.getItem('open-purchase-user');
-      if (savedUser) {
-        try {
-          setUser(JSON.parse(savedUser));
-        } catch (e) {
-          router.push("/login");
-        }
-      } else {
-        router.push("/login");
-      }
-    }
-  }, [mounted, user, router]);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowUserMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Show loading state
-  if (!mounted) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: 'var(--background)'
-      }}>
-        <p style={{ color: 'var(--muted)' }}>載入中...</p>
-      </div>
-    );
-  }
-
-  // Show loading while checking auth
-  if (!user) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: 'var(--background)'
-      }}>
-        <p style={{ color: 'var(--muted)' }}>正在驗證...</p>
-      </div>
-    );
-  }
-
-  const isZh = lang === "zh";
-
-  const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", labelZh: "儀表板", href: "/" },
-    { icon: ShoppingCart, label: "Orders", labelZh: "訂單", href: "/orders" },
-    { icon: Users, label: "Suppliers", labelZh: "供應商", href: "/suppliers" },
-    { icon: Calculator, label: "Recipes", labelZh: "食譜", href: "/recipes" },
-    { icon: Package, label: "Inventory", labelZh: "庫存", href: "/inventory" },
-    { icon: FileText, label: "Reports", labelZh: "報告", href: "/reports" },
-    { icon: BarChart3, label: "Analytics", labelZh: "分析", href: "/analytics" },
-    { icon: Settings, label: "Settings", labelZh: "設定", href: "/settings" },
-  ];
-
-  const handleLogout = () => {
-    localStorage.removeItem('open-purchase-user');
-    router.push('/login');
-  };
+function DashboardContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { isDark, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
-      {/* Sidebar */}
-      <aside
-        className={`fixed left-0 top-0 h-screen transition-all duration-300 ${
-          sidebarCollapsed ? "w-16" : "w-64"
-        }`}
-        style={{ 
-          background: 'var(--card-bg)',
-          boxShadow: '2px 0 8px var(--shadow)',
-          zIndex: 50,
-        }}
-      >
-        {/* Logo */}
-        <div 
-          className="h-16 flex items-center justify-between px-4"
-          style={{ borderBottom: '1px solid rgba(128,128,128,0.1)' }}
-        >
-          {!sidebarCollapsed && (
-            <h1 className="text-xl font-bold" style={{ color: 'var(--primary)' }}>🍽️ Open Purchase</h1>
-          )}
+    <div style={{ 
+      display: 'flex', 
+      minHeight: '100vh', 
+      background: isDark ? '#111827' : '#f5f5f5',
+      color: isDark ? '#f9fafb' : '#1a1a1a',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      transition: 'all 0.3s ease'
+    }}>
+      {/* Left Sidebar */}
+      <aside style={{
+        width: sidebarOpen ? '260px' : '70px',
+        background: isDark ? '#1f2937' : '#ffffff',
+        boxShadow: isDark ? '2px 0 8px rgba(0,0,0,0.3)' : '2px 0 8px rgba(0,0,0,0.08)',
+        transition: 'width 0.15s ease, background 0.3s ease',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+        borderRight: isDark ? '1px solid #374151' : 'none'
+      }}>
+        {/* Logo with Toggle */}
+        <div style={{
+          padding: '20px',
+          borderBottom: isDark ? '1px solid #374151' : '1px solid #f5f5f5',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexShrink: 0,
+          transition: 'all 0.3s ease'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+            <ShoppingCart size={24} color="#2d9e6d" />
+            {sidebarOpen && (
+              <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#2d9e6d', whiteSpace: 'nowrap' }}>
+                Open Purchase
+              </span>
+            )}
+          </div>
           <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            style={{ 
-              padding: '8px', 
-              borderRadius: '8px',
-              background: 'transparent',
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            style={{
+              padding: '8px 12px',
+              background: isDark ? '#374151' : '#f5f5f5',
               border: 'none',
+              borderRadius: '8px',
+              color: isDark ? '#9ca3af' : '#757575',
               cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = '#2d9e6d';
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = isDark ? '#374151' : '#f5f5f5';
+              e.currentTarget.style.color = isDark ? '#9ca3af' : '#757575';
             }}
           >
-            {sidebarCollapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
+            {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {menuItems.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '10px 12px',
-                borderRadius: '12px',
-                color: 'var(--foreground)',
-                textDecoration: 'none',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(45, 158, 109, 0.1)';
-                e.currentTarget.style.color = 'var(--primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = 'var(--foreground)';
-              }}
-            >
-              <item.icon size={20} />
-              {!sidebarCollapsed && (
-                <span>{isZh ? item.labelZh : item.label}</span>
-              )}
-            </a>
-          ))}
+        {/* Menu */}
+        <nav style={{ flex: 1, padding: '12px', overflow: 'auto' }}>
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                href={item.path}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  marginBottom: '4px',
+                  background: isActive ? (isDark ? '#374151' : '#f5f5f5') : 'transparent',
+                  color: isActive ? '#2d9e6d' : (isDark ? '#9ca3af' : '#757575'),
+                  textDecoration: 'none',
+                  transition: 'all 0.15s ease',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseOver={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = isDark ? '#374151' : '#f5f5f5';
+                    e.currentTarget.style.color = '#2d9e6d';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = isDark ? '#9ca3af' : '#757575';
+                  }
+                }}
+              >
+                <Icon size={20} color={isActive ? '#2d9e6d' : (isDark ? '#9ca3af' : '#757575')} />
+                {sidebarOpen && (
+                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main
-        className="transition-all duration-300"
-        style={{ marginLeft: sidebarCollapsed ? '64px' : '256px' }}
-      >
-        {/* Header */}
-        <header 
-          className="h-16 flex items-center justify-between px-6 sticky top-0 z-40"
-          style={{ 
-            background: 'var(--card-bg)',
-            boxShadow: '0 2px 8px var(--shadow)',
-          }}
-        >
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative flex-1 max-w-md">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2"
-                size={18}
-                style={{ color: 'var(--muted)' }}
-              />
-              <input
-                type="text"
-                placeholder={isZh ? "搜尋..." : "Search..."}
-                className="search-input"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <ThemeSwitcher />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Top Bar */}
+        <header style={{ 
+          padding: '16px 24px', 
+          background: isDark ? '#1f2937' : '#ffffff',
+          boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0,
+          transition: 'all 0.3s ease'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {/* 黑夜模式切換 */}
+            <button
+              onClick={toggleTheme}
+              style={{
+                padding: '8px 12px',
+                background: isDark ? '#374151' : '#f5f5f5',
+                border: 'none',
+                borderRadius: '12px',
+                color: isDark ? '#fbbf24' : '#757575',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = isDark ? '#4b5563' : '#e5e7eb';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = isDark ? '#374151' : '#f5f5f5';
+              }}
+              title={isDark ? '切換到日間模式' : '切換到夜間模式'}
+            >
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+              <span>{isDark ? '日間' : '夜間'}</span>
+            </button>
             
-            {/* User Menu */}
-            <div style={{ position: 'relative' }} ref={menuRef}>
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  background: 'var(--primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: '500',
-                  fontSize: '14px',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                OP
-              </button>
-              
-              {showUserMenu && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: 0,
-                    marginTop: '8px',
-                    width: '240px',
-                    background: 'var(--card-bg)',
-                    borderRadius: '16px',
-                    boxShadow: '0 4px 20px var(--shadow)',
-                    overflow: 'hidden',
-                    zIndex: 100,
-                  }}
-                >
-                  {/* User Info */}
-                  <div style={{ padding: '16px', borderBottom: '1px solid rgba(128,128,128,0.1)' }}>
-                    <p style={{ fontWeight: '600', margin: 0 }}>{user?.name || "User"}</p>
-                    <p style={{ color: 'var(--muted)', fontSize: '13px', margin: '4px 0 0 0' }}>{user?.email || ""}</p>
-                  </div>
-                  
-                  {/* Menu Items */}
-                  <div style={{ padding: '8px' }}>
-                    <a
-                      href="/settings"
-                      onClick={() => setShowUserMenu(false)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        color: 'var(--foreground)',
-                        textDecoration: 'none',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(128,128,128,0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <User size={18} />
-                      <span>{isZh ? "個人資料" : "Profile"}</span>
-                    </a>
-                    
-                    <a
-                      href="/settings"
-                      onClick={() => setShowUserMenu(false)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        color: 'var(--foreground)',
-                        textDecoration: 'none',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(128,128,128,0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <Building size={18} />
-                      <span>{isZh ? "餐廳資料" : "Restaurant"}</span>
-                    </a>
-                    
-                    <div style={{ height: '1px', background: 'rgba(128,128,128,0.1)', margin: '8px 0' }} />
-                    
-                    <button
-                      onClick={handleLogout}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        color: '#ef4444',
-                        background: 'transparent',
-                        border: 'none',
-                        width: '100%',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        textAlign: 'left',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <LogOut size={18} />
-                      <span>{isZh ? "登出" : "Logout"}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+            {/* 搜索框 */}
+            <GlobalSearch isDark={isDark} />
+          </div>
+          
+          {/* 用戶信息 + 登出 */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '8px 16px',
+            background: isDark ? '#374151' : '#f5f5f5',
+            borderRadius: '12px',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.boxShadow = isDark ? '0 2px 8px rgba(0,0,0,0.5)' : '0 2px 8px rgba(0,0,0,0.12)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          >
+            {/* 用戶頭像 */}
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #2d9e6d 0%, #5ac8fa 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              flexShrink: 0
+            }}>
+              <User size={18} />
             </div>
+            
+            {/* 用戶名稱 */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px'
+            }}>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>管理員</span>
+              <span style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>demo@restaurant.com</span>
+            </div>
+            
+            {/* 分隔線 */}
+            <div style={{
+              width: '1px',
+              height: '24px',
+              background: isDark ? '#4b5563' : '#e5e7eb',
+              margin: '0 8px'
+            }} />
+            
+            {/* 登出按鈕 */}
+            <button
+              onClick={() => {
+                document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                localStorage.removeItem('open-purchase-user');
+                window.location.href = '/auth/login';
+              }}
+              style={{
+                padding: '6px 12px',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '8px',
+                color: isDark ? '#f87171' : '#ef4444',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = isDark ? '#450a0a' : '#fef2f2';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <LogOut size={16} />
+              <span>登出</span>
+            </button>
           </div>
         </header>
 
-        {/* Page Content */}
-        <div style={{ padding: '24px' }}>{children}</div>
-      </main>
+        {/* Content */}
+        <main style={{ flex: 1, padding: '24px', overflow: 'auto' }}>
+          {children}
+        </main>
+      </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeProvider>
+      <DashboardContent>{children}</DashboardContent>
+    </ThemeProvider>
   );
 }

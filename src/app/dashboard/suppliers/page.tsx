@@ -1,333 +1,273 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin, X, Truck, Box } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react';
+import SupplierForm from "@/components/suppliers/SupplierForm";
+
 
 interface Supplier {
   id: string;
+  supplier_number: string;
   name: string;
   contact: string;
   phone: string;
   email: string;
-  address: string;
-  deliveryDay: string;
-  moq: string;
-  category: string;
-  notes: string;
-  isActive: boolean;
+  status: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
+// Mock data for demo
 const mockSuppliers: Supplier[] = [
-  { id: "1", name: "Fresh Farm Co", contact: "John Smith", phone: "+852 1234 5678", email: "john@freshfarm.com", address: "123 Farm Road, NT", deliveryDay: "Mon,Wed,Fri", moq: "500", category: "Vegetables", notes: "Fresh produce", isActive: true },
-  { id: "2", name: "Ocean Seafood", contact: "Mary Chan", phone: "+852 2345 6789", email: "mary@ocean.com", address: "456 Aberdeen Market", deliveryDay: "Tue,Thu,Sat", moq: "300", category: "Seafood", notes: "Fresh catch daily", isActive: true },
-  { id: "3", name: "Kitchen Supplies Ltd", contact: "David Wong", phone: "+852 3456 7890", email: "david@kitchen.com", address: "789 Kwai Chung", deliveryDay: "Mon,Fri", moq: "1000", category: "Dry Goods", notes: "Bulk orders", isActive: true },
-  { id: "4", name: "Spice World", contact: "Lisa Lau", phone: "+852 4567 8901", email: "lisa@spice.com", address: "321 Mong Kok", deliveryDay: "Wed", moq: "200", category: "Spices", notes: "Import spices", isActive: false },
+  { id: '1', supplier_number: 'SUP-001', name: 'Fresh Farm Co', contact: 'John Smith', phone: '+852 1234 5678', email: 'john@freshfarm.com', status: '活躍' },
+  { id: '2', supplier_number: 'SUP-002', name: 'Ocean Seafood', contact: 'Mary Chan', phone: '+852 2345 6789', email: 'mary@ocean.com', status: '活躍' },
+  { id: '3', supplier_number: 'SUP-003', name: 'Kitchen Supplies Ltd', contact: 'David Wong', phone: '+852 3456 7890', email: 'david@kitchen.com', status: '待審核' },
+  { id: '4', supplier_number: 'SUP-004', name: 'Spice World', contact: 'Lisa Lau', phone: '+852 4567 8901', email: 'lisa@spice.com', status: '活躍' },
 ];
 
-const categories = ["Vegetables", "Seafood", "Meat", "Dry Goods", "Spices", "Oils", "Beverages", "Equipment", "Other"];
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  restaurantName: string;
-  restaurantAddress: string;
-}
-
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]); // Start empty for all users
-  const [search, setSearch] = useState("");
-  const [lang, setLang] = useState<"en" | "zh">("zh");
-  const [showModal, setShowModal] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [newSupplier, setNewSupplier] = useState({
-    name: "",
-    contact: "",
-    phone: "",
-    email: "",
-    address: "",
-    deliveryDay: "",
-    moq: "",
-    category: "",
-    notes: "",
-  });
-  const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("open-purchase-lang");
-    if (saved === "en" || saved === "zh") {
-      setLang(saved);
-    }
-    
-    const savedUser = localStorage.getItem('open-purchase-user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        setUser(null);
-      }
-    }
-
-    // Load suppliers from localStorage
-    const savedSuppliers = localStorage.getItem('open-purchase-suppliers');
-    if (savedSuppliers) {
-      try {
-        setSuppliers(JSON.parse(savedSuppliers));
-      } catch (e) {
-        setSuppliers([]);
-      }
-    }
-
-    // Listen for storage changes (when user updates from another tab/page)
-    const handleStorageChange = () => {
-      const savedSuppliers = localStorage.getItem('open-purchase-suppliers');
-      if (savedSuppliers) {
-        try {
-          setSuppliers(JSON.parse(savedSuppliers));
-        } catch (e) {
-          setSuppliers([]);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    const savedTheme = localStorage.getItem('theme');
+    const isDarkMode = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    setIsDark(isDarkMode);
   }, []);
 
-  const isZh = lang === "zh";
-  const isBlankUser = user?.email === "eldon@chta.one" || user?.name === "";
-
-  const handleAddSupplier = () => {
-    if (newSupplier.name && newSupplier.contact && newSupplier.phone && newSupplier.email) {
-      const supplier: Supplier = {
-        id: editingSupplier ? editingSupplier.id : String(Date.now()),
-        ...newSupplier,
-        isActive: true,
-      };
-      
-      let newSuppliers: Supplier[];
-      if (editingSupplier) {
-        // Update existing supplier
-        newSuppliers = suppliers.map(s => s.id === editingSupplier.id ? supplier : s);
-      } else {
-        // Add new supplier
-        newSuppliers = [...suppliers, supplier];
-      }
-      
-      setSuppliers(newSuppliers);
-      localStorage.setItem('open-purchase-suppliers', JSON.stringify(newSuppliers));
-      setShowModal(false);
-      setEditingSupplier(null);
-      setNewSupplier({ name: "", contact: "", phone: "", email: "", address: "", deliveryDay: "", moq: "", category: "", notes: "" });
+  // Fetch suppliers (using mock data)
+  const fetchSuppliers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Use mock data as fallback
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setSuppliers(mockSuppliers);
+    } catch (err: any) {
+      console.error("Error fetching suppliers:", err);
+      setError("無法載入供應商資料");
+      setSuppliers(mockSuppliers); // Fallback to mock data
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteSupplier = (id: string) => {
-    if (confirm(isZh ? "確定刪除此供應商？" : "Delete this supplier?")) {
-      const updated = suppliers.filter(s => s.id !== id);
-      setSuppliers(updated);
-      localStorage.setItem('open-purchase-suppliers', JSON.stringify(updated));
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  const handleSaveSupplier = () => {
+    // Mock save - in real app would receive supplier data
+    if (editingSupplier) {
+      setSuppliers(suppliers.map(s => s.id === editingSupplier.id ? editingSupplier : s));
+    } else {
+      setSuppliers([...suppliers, { ...editingSupplier!, id: String(Date.now()) }]);
     }
+    setIsFormOpen(false);
+    setEditingSupplier(null);
+  };
+
+  const handleDeleteSupplier = async (id: string) => {
+    setSuppliers(suppliers.filter(s => s.id !== id));
+    setDeletingId(null);
   };
 
   const handleEditSupplier = (supplier: Supplier) => {
     setEditingSupplier(supplier);
-    setNewSupplier({
-      name: supplier.name,
-      contact: supplier.contact,
-      phone: supplier.phone,
-      email: supplier.email,
-      address: supplier.address,
-      deliveryDay: supplier.deliveryDay,
-      moq: supplier.moq,
-      category: supplier.category,
-      notes: supplier.notes,
-    });
-    setShowModal(true);
+    setIsFormOpen(true);
   };
 
-  const handleSaveSupplier = () => {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case '活躍': return <CheckCircle size={14} />;
+      case '待審核': return <Clock size={14} />;
+      default: return <XCircle size={14} />;
+    }
+  };
 
-  const filteredSuppliers = suppliers.filter(
-    (s) =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.contact.toLowerCase().includes(search.toLowerCase()) ||
-      s.category.toLowerCase().includes(search.toLowerCase())
-  );
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case '活躍': return '#4ade80';
+      case '待審核': return '#f59e0b';
+      default: return '#ef4444';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ background: isDark ? '#111827' : '#f5f5f5', minHeight: '100vh', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: isDark ? '#9ca3af' : '#757575', fontSize: '16px' }}>載入中...</div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div style={{ background: isDark ? '#111827' : '#f5f5f5', minHeight: '100vh', padding: '24px', transition: 'all 0.3s ease' }}>
+      {/* Page Header */}
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
-            {isZh ? "供應商管理" : "Suppliers"}
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>
+            供應商管理
           </h1>
-          <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>
-            {isZh ? "管理你的供應商資料" : "Manage your supplier information"}
+          <p style={{ margin: 0, color: isDark ? '#9ca3af' : '#757575', fontSize: '14px', transition: 'color 0.3s ease' }}>
+            管理供應商資料同聯絡方式
           </p>
         </div>
         <button
-          className="btn-primary"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          onClick={() => {
-            setEditingSupplier(null);
-            setNewSupplier({ name: "", contact: "", phone: "", email: "", address: "", deliveryDay: "", moq: "", category: "", notes: "" });
-            setShowModal(true);
+          onClick={() => setIsFormOpen(true)}
+          style={{
+            padding: '12px 24px',
+            background: '#2d9e6d',
+            border: 'none',
+            borderRadius: '12px',
+            color: 'white',
+            fontWeight: '600',
+            fontSize: '14px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}
         >
-          <Plus size={18} />
-          {isZh ? "新增供應商" : "Add Supplier"}
+          <Plus size={20} /> 新增供應商
         </button>
       </div>
 
-      {/* Search */}
-      <div style={{ position: 'relative', maxWidth: '400px' }}>
-        <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} size={18} />
-        <input
-          type="text"
-          placeholder={isZh ? "搜尋供應商..." : "Search suppliers..."}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="search-input"
-        />
-      </div>
-
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-        <div className="stat-card">
-          <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0 }}>{suppliers.length}</h3>
-          <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "供應商總數" : "Total Suppliers"}</p>
+      {/* Stats Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '20px',
+        marginBottom: '24px'
+      }}>
+        <div style={{ padding: '20px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <p style={{ margin: '0 0 8px 0', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', transition: 'color 0.3s ease' }}>總供應商</p>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>{suppliers.length}</p>
         </div>
-        <div className="stat-card">
-          <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0, color: 'var(--primary)' }}>
-            {suppliers.filter((s) => s.isActive).length}
-          </h3>
-          <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "活躍供應商" : "Active Suppliers"}</p>
+        <div style={{ padding: '20px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <p style={{ margin: '0 0 8px 0', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', transition: 'color 0.3s ease' }}>活躍</p>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: '#2d9e6d' }}>{suppliers.filter(s => s.status === '活躍').length}</p>
         </div>
-        <div className="stat-card">
-          <h3 style={{ fontSize: '28px', fontWeight: '600', margin: 0, color: 'var(--muted)' }}>
-            {new Set(suppliers.map(s => s.category)).size}
-          </h3>
-          <p style={{ color: 'var(--muted)', marginTop: '4px' }}>{isZh ? "類別數量" : "Categories"}</p>
+        <div style={{ padding: '20px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <p style={{ margin: '0 0 8px 0', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', transition: 'color 0.3s ease' }}>待審核</p>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{suppliers.filter(s => s.status === '待審核').length}</p>
         </div>
       </div>
 
-      {/* Empty State for blank users */}
-      {isBlankUser ? (
-        <div style={{ 
-          background: 'var(--card-bg)', 
-          borderRadius: '16px', 
-          padding: '60px', 
-          boxShadow: '0 2px 8px var(--shadow)',
-          textAlign: 'center'
+      {/* Error Message */}
+      {error && (
+        <div style={{
+          padding: '16px',
+          background: isDark ? '#450a0a' : '#fef2f2',
+          border: '1px solid ' + (isDark ? '#7f1d1d' : '#fecaca'),
+          borderRadius: '12px',
+          color: '#f87171',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          transition: 'all 0.3s ease'
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏪</div>
-          <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
-            {isZh ? "還沒有供應商" : "No Suppliers Yet"}
-          </h2>
-          <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
-            {isZh ? "添加供應商來開始採購管理" : "Add suppliers to start managing your procurement"}
-          </p>
+          <span>{error}</span>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={fetchSuppliers}
             style={{
-              display: 'inline-flex',
-              padding: '12px 24px',
-              background: 'var(--primary)',
-              color: 'white',
+              padding: '6px 12px',
+              background: '#dc2626',
               border: 'none',
-              borderRadius: '12px',
-              fontSize: '14px',
-              fontWeight: '500',
+              borderRadius: '8px',
+              color: 'white',
               cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
             }}
           >
-            {isZh ? "添加供應商" : "Add Supplier"}
+            <RefreshCw size={14} /> 重試
           </button>
         </div>
-        ) : (
-        <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px' }}>
-        {filteredSuppliers.map((supplier) => (
-          <div key={supplier.id} className="card" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-              <div>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>{supplier.name}</h3>
-                <p style={{ color: 'var(--muted)', fontSize: '14px', marginTop: '4px' }}>{supplier.contact}</p>
-              </div>
-              <span className="badge" style={{
-                background: supplier.isActive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(107, 114, 128, 0.15)',
-                color: supplier.isActive ? '#059669' : '#6b7280',
-              }}>
-                {supplier.isActive ? (isZh ? "活躍" : "Active") : (isZh ? "暫停" : "Inactive")}
-              </span>
-            </div>
+      )}
 
-            {/* Category */}
-            <div style={{ marginTop: '12px' }}>
-              <span className="badge" style={{ background: 'rgba(45, 158, 109, 0.15)', color: 'var(--primary)' }}>
-                {supplier.category}
-              </span>
-            </div>
-
-            {/* Contact Info */}
-            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)', fontSize: '14px' }}>
-                <Phone size={14} />{supplier.phone}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)', fontSize: '14px' }}>
-                <Mail size={14} />{supplier.email}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)', fontSize: '14px' }}>
-                <MapPin size={14} />{supplier.address}
-              </div>
-            </div>
-
-            {/* Delivery & MOQ */}
-            <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div style={{ padding: '12px', background: 'var(--background)', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--muted)', fontSize: '12px', marginBottom: '4px' }}>
-                  <Truck size={14} />{isZh ? "車期" : "Delivery"}
-                </div>
-                <p style={{ fontSize: '14px', fontWeight: '500', margin: 0 }}>{supplier.deliveryDay || "-"}</p>
-              </div>
-              <div style={{ padding: '12px', background: 'var(--background)', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--muted)', fontSize: '12px', marginBottom: '4px' }}>
-                  <Box size={14} />{isZh ? "最低訂量" : "MOQ"}
-                </div>
-                <p style={{ fontSize: '14px', fontWeight: '500', margin: 0 }}>{supplier.moq ? `$${supplier.moq}` : "-"}</p>
-              </div>
-            </div>
-
-            {/* Notes */}
-            {supplier.notes && (
-              <p style={{ marginTop: '12px', fontSize: '13px', color: 'var(--muted)', fontStyle: 'italic' }}>
-                "{supplier.notes}"
-              </p>
-            )}
-
-            {/* Actions */}
-            <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-              <button className="btn-secondary" style={{ flex: 1 }}>
-                {isZh ? "聯絡" : "Contact"}
-              </button>
-              <button className="btn-secondary" style={{ padding: '10px' }} onClick={() => handleEditSupplier(supplier)}>
-                <Edit size={18} />
-              </button>
-              <button className="btn-secondary" style={{ padding: '10px', color: '#ef4444' }} onClick={() => handleDeleteSupplier(supplier.id)}>
-                <Trash2 size={18} />
-              </button>
-            </div>
-          </div>
-        ))}
+      {/* Suppliers Table */}
+      <div style={{ background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', overflow: 'hidden', transition: 'all 0.3s ease' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid ' + (isDark ? '#374151' : '#f5f5f5') }}>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>供應商編號</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>名稱</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>聯絡人</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>電話</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>電郵</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>狀態</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: isDark ? '#9ca3af' : '#757575', fontSize: '12px', fontWeight: '600', transition: 'color 0.3s ease' }}>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {suppliers.map((supplier) => (
+              <tr key={supplier.id} style={{ borderBottom: '1px solid ' + (isDark ? '#374151' : '#f5f5f5'), transition: 'border-color 0.3s ease' }}>
+                <td style={{ padding: '16px', color: '#2d9e6d', fontSize: '14px', fontWeight: '600' }}>{supplier.supplier_number}</td>
+                <td style={{ padding: '16px', color: isDark ? '#f9fafb' : '#1a1a1a', fontSize: '14px', fontWeight: '600', transition: 'color 0.3s ease' }}>{supplier.name}</td>
+                <td style={{ padding: '16px', color: isDark ? '#9ca3af' : '#757575', fontSize: '14px', transition: 'color 0.3s ease' }}>{supplier.contact}</td>
+                <td style={{ padding: '16px', color: isDark ? '#9ca3af' : '#757575', fontSize: '14px', transition: 'color 0.3s ease' }}>{supplier.phone}</td>
+                <td style={{ padding: '16px', color: isDark ? '#9ca3af' : '#757575', fontSize: '14px', transition: 'color 0.3s ease' }}>{supplier.email}</td>
+                <td style={{ padding: '16px' }}>
+                  <span style={{
+                    padding: '4px 12px',
+                    background: getStatusColor(supplier.status) + '20',
+                    color: getStatusColor(supplier.status),
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    {getStatusIcon(supplier.status)}
+                    {supplier.status}
+                  </span>
+                </td>
+                <td style={{ padding: '16px' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => handleEditSupplier(supplier)}
+                      style={{ padding: '6px 12px', background: '#f5f5f5', border: 'none', borderRadius: '8px', color: '#757575', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center' }}
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      onClick={() => setDeletingId(supplier.id)}
+                      style={{ padding: '6px 12px', background: '#f5f5f5', border: 'none', borderRadius: '8px', color: '#ef4444', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center' }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      </>)}
 
-      {/* Modal */}
-      {showModal && (
+      {/* Supplier Form Modal */}
+      {isFormOpen && (
+        <SupplierForm
+          isOpen={isFormOpen}
+          supplier={editingSupplier}
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingSupplier(null);
+          }}
+          onSuccess={handleSaveSupplier}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingId && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -338,180 +278,34 @@ export default function SuppliersPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px',
-          overflow: 'auto',
+          zIndex: 1000
         }}>
-          <div className="card" style={{ width: '100%', maxWidth: '560px', padding: '32px', maxHeight: '90vh', overflow: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
-                {editingSupplier 
-                  ? (isZh ? "編輯供應商" : "Edit Supplier")
-                  : (isZh ? "新增供應商" : "Add Supplier")}
-              </h2>
-              <button onClick={() => setShowModal(false)} style={{ padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
-                <X size={20} />
+          <div style={{
+            background: 'white',
+            padding: '32px',
+            borderRadius: '16px',
+            maxWidth: '400px',
+            width: '100%'
+          }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 16px 0', color: '#1a1a1a' }}>確認刪除</h3>
+            <p style={{ color: '#757575', margin: '0 0 24px 0' }}>你係咪想刪除此供應商？</p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setDeletingId(null)}
+                style={{ padding: '10px 20px', background: '#f5f5f5', border: 'none', borderRadius: '12px', color: '#757575', cursor: 'pointer', fontWeight: '600' }}
+              >
+                取消
               </button>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Basic Info */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                    {isZh ? "公司名稱 *" : "Company Name *"}
-                  </label>
-                  <input
-                    type="text"
-                    value={newSupplier.name}
-                    onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
-                    className="input"
-                    placeholder={isZh ? "輸入公司名稱" : "Enter company name"}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                    {isZh ? "聯絡人 *" : "Contact Person *"}
-                  </label>
-                  <input
-                    type="text"
-                    value={newSupplier.contact}
-                    onChange={(e) => setNewSupplier({ ...newSupplier, contact: e.target.value })}
-                    className="input"
-                    placeholder={isZh ? "輸入聯絡人" : "Enter contact name"}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-              </div>
-              
-              {/* Contact */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                    {isZh ? "電話 *" : "Phone *"}
-                  </label>
-                  <input
-                    type="text"
-                    value={newSupplier.phone}
-                    onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
-                    className="input"
-                    placeholder={isZh ? "輸入電話" : "Enter phone"}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                    {isZh ? "電郵 *" : "Email *"}
-                  </label>
-                  <input
-                    type="email"
-                    value={newSupplier.email}
-                    onChange={(e) => setNewSupplier({ ...newSupplier, email: e.target.value })}
-                    className="input"
-                    placeholder={isZh ? "輸入電郵" : "Enter email"}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-              </div>
-              
-              {/* Address */}
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "地址" : "Address"}
-                </label>
-                <input
-                  type="text"
-                  value={newSupplier.address}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, address: e.target.value })}
-                  className="input"
-                  placeholder={isZh ? "輸入地址" : "Enter address"}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              
-              {/* Category & MOQ */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                    {isZh ? "類別" : "Category"}
-                  </label>
-                  <select
-                    value={newSupplier.category}
-                    onChange={(e) => setNewSupplier({ ...newSupplier, category: e.target.value })}
-                    className="input"
-                    style={{ width: '100%' }}
-                  >
-                    <option value="">{isZh ? "選擇類別" : "Select category"}</option>
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                    {isZh ? "最低訂量 (MOQ)" : "Minimum Order Qty"}
-                  </label>
-                  <input
-                    type="text"
-                    value={newSupplier.moq}
-                    onChange={(e) => setNewSupplier({ ...newSupplier, moq: e.target.value })}
-                    className="input"
-                    placeholder={isZh ? "輸入MOQ" : "Enter MOQ"}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-              </div>
-              
-              {/* Delivery */}
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "送貨日子 (車期)" : "Delivery Days"}
-                </label>
-                <input
-                  type="text"
-                  value={newSupplier.deliveryDay}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, deliveryDay: e.target.value })}
-                  className="input"
-                  placeholder={isZh ? "如：Mon,Wed,Fri" : "e.g., Mon,Wed,Fri"}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              
-              {/* Notes */}
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  {isZh ? "備註" : "Notes"}
-                </label>
-                <textarea
-                  value={newSupplier.notes}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, notes: e.target.value })}
-                  className="input"
-                  placeholder={isZh ? "輸入備註" : "Enter notes"}
-                  rows={3}
-                  style={{ width: '100%', resize: 'vertical' }}
-                />
-              </div>
-              
-              {/* Buttons */}
-              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                <button onClick={() => setShowModal(false)} className="btn-secondary" style={{ flex: 1 }}>
-                  {isZh ? "取消" : "Cancel"}
-                </button>
-                <button
-                  onClick={handleAddSupplier}
-                  className="btn-primary"
-                  style={{ flex: 1 }}
-                  disabled={!newSupplier.name || !newSupplier.contact || !newSupplier.phone || !newSupplier.email}
-                >
-                  {editingSupplier 
-                    ? (isZh ? "更新供應商" : "Update Supplier")
-                    : (isZh ? "創建供應商" : "Create Supplier")}
-                </button>
-              </div>
+              <button
+                onClick={() => handleDeleteSupplier(deletingId)}
+                style={{ padding: '10px 20px', background: '#ef4444', border: 'none', borderRadius: '12px', color: 'white', cursor: 'pointer', fontWeight: '600' }}
+              >
+                刪除
+              </button>
             </div>
           </div>
         </div>
       )}
     </div>
   );
-}
 }

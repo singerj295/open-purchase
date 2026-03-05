@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
           // 安全headers - Content Security Policy
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'",
+            value: "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.app",
           },
           // 安全headers - HTTP Strict Transport Security
           {

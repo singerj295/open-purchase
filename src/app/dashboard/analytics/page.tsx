@@ -1,413 +1,237 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { TrendingUp, TrendingDown, DollarSign, Package, ShoppingCart, AlertTriangle } from 'lucide-react';
 
-interface Order {
-  id: string;
-  orderNumber: string;
-  supplier: string;
-  product: string;
-  items: number;
-  total: number;
-  status: string;
-  date: string;
-}
+// Mock 分析數據
+const costTrendData = [
+  { month: '7 月', cost: 65000, budget: 70000 },
+  { month: '8 月', cost: 68000, budget: 70000 },
+  { month: '9 月', cost: 72000, budget: 75000 },
+  { month: '10 月', cost: 78000, budget: 80000 },
+  { month: '11 月', cost: 82000, budget: 85000 },
+  { month: '12 月', cost: 88000, budget: 90000 },
+];
 
-interface Supplier {
-  id: string;
-  name: string;
-  contact: string;
-  phone: string;
-  email: string;
-  address: string;
-  deliveryDay: string;
-  moq: string;
-  category: string;
-  notes: string;
-  isActive: boolean;
-}
+const inventoryMetrics = {
+  turnoverRate: 12.5,
+  daysOnHand: 29,
+  stockoutRate: 2.3,
+  wasteRate: 1.8,
+};
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  restaurantName: string;
-  restaurantAddress: string;
-}
+const supplierComparison = [
+  { name: 'Fresh Farm Co', price: 100, quality: 95, delivery: 92 },
+  { name: 'Ocean Seafood', price: 85, quality: 90, delivery: 88 },
+  { name: 'Kitchen Supplies', price: 92, quality: 88, delivery: 95 },
+];
+
+const alerts = [
+  { type: 'warning', message: '3 項食材庫存低於安全水平', time: '2 小時前' },
+  { type: 'info', message: '本月採購成本比上月增加 8%', time: '5 小時前' },
+  { type: 'success', message: '供應商準時率達到 95%', time: '1 天前' },
+];
 
 export default function AnalyticsPage() {
-  const [lang, setLang] = useState<"en" | "zh">("zh");
-  const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("open-purchase-lang");
-    if (saved === "en" || saved === "zh") {
-      setLang(saved);
-    }
-    
-    const savedUser = localStorage.getItem('open-purchase-user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        setUser(null);
-      }
-    }
-
-    const savedOrders = localStorage.getItem('open-purchase-orders');
-    if (savedOrders) {
-      try {
-        setOrders(JSON.parse(savedOrders));
-      } catch (e) {
-        setOrders([]);
-      }
-    }
-
-    const savedSuppliers = localStorage.getItem('open-purchase-suppliers');
-    if (savedSuppliers) {
-      try {
-        setSuppliers(JSON.parse(savedSuppliers));
-      } catch (e) {
-        setSuppliers([]);
-      }
-    }
+    const savedTheme = localStorage.getItem('theme');
+    const isDarkMode = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    setIsDark(isDarkMode);
   }, []);
 
-  const isZh = lang === "zh";
-  const isBlankUser = user?.email === "eldon@chta.one" || user?.name === "";
-
-  // Calculate real metrics
-  const totalSpend = orders.reduce((sum, o) => sum + o.total, 0);
-  const totalOrders = orders.length;
-  const avgOrderValue = totalOrders > 0 ? Math.round(totalSpend / totalOrders) : 0;
-  const activeSuppliers = suppliers.filter(s => s.isActive).length;
-
-  // Calculate spend by category (using supplier categories)
-  const categoryMap = new Map<string, number>();
-  orders.forEach(order => {
-    const supplier = suppliers.find(s => s.name === order.supplier);
-    const category = supplier?.category || "Other";
-    categoryMap.set(category, (categoryMap.get(category) || 0) + order.total);
-  });
-  
-  const categoryColors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4", "#ec4899"];
-  const categoryData = Array.from(categoryMap.entries()).map(([name, value], i) => ({
-    name,
-    value,
-    color: categoryColors[i % categoryColors.length]
-  }));
-
-  // Calculate monthly spend trend (last 6 months)
-  const monthlyMap = new Map<string, number>();
-  orders.forEach(order => {
-    const date = new Date(order.date);
-    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-    monthlyMap.set(monthKey, (monthlyMap.get(monthKey) || 0) + order.total);
-  });
-  
-  const months = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date();
-    d.setMonth(d.getMonth() - i);
-    months.push(d.toLocaleDateString('en-US', { month: 'short' }));
-  }
-  
-  const monthlySpend = months.map(month => ({
-    month,
-    spend: monthlyMap.get(month) || 0
-  }));
-
-  // Supplier performance
-  const supplierPerformance = suppliers.map(supplier => {
-    const supplierOrders = orders.filter(o => o.supplier === supplier.name);
-    const supplierSpend = supplierOrders.reduce((sum, o) => sum + o.total, 0);
-    return {
-      name: supplier.name,
-      orders: supplierOrders.length,
-      rating: supplier.isActive ? 4.5 : 4.0,
-      spend: supplierSpend,
-    };
-  }).filter(s => s.orders > 0);
-
-  if (!mounted) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>{isZh ? "數據分析" : "Analytics"}</h1>
-        </div>
-      </div>
-    );
-  }
-
-  // Show empty state if no data
-  if (orders.length === 0 && suppliers.length === 0) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
-            {isZh ? "數據分析" : "Analytics"}
-          </h1>
-          <p style={{ color: 'var(--muted)', marginTop: '4px' }}>
-            {isZh ? "追蹤你的採購表現" : "Track your procurement performance"}
-          </p>
-        </div>
-
-        <div style={{ 
-          background: 'var(--card-bg)', 
-          borderRadius: '16px', 
-          padding: '60px', 
-          boxShadow: '0 2px 8px var(--shadow)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
-          <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
-            {isZh ? "還沒有數據" : "No Data Yet"}
-          </h2>
-          <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
-            {isZh ? "建立訂單後就會顯示分析數據" : "Analytics will appear after you create orders"}
-          </p>
-          <a 
-            href="/orders"
-            style={{
-              display: 'inline-flex',
-              padding: '12px 24px',
-              background: 'var(--primary)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              textDecoration: 'none',
-            }}
-          >
-            {isZh ? "建立訂單" : "Create Order"}
-          </a>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Header */}
-      <div>
-        <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
-          {isZh ? "數據分析" : "Analytics"}
+    <div style={{ 
+      background: isDark ? '#111827' : '#f5f5f5', 
+      minHeight: '100vh', 
+      padding: '24px',
+      transition: 'all 0.3s ease'
+    }}>
+      {/* Page Header */}
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>
+          數據分析
         </h1>
-        <p style={{ color: 'var(--muted)', marginTop: '4px' }}>
-          {isZh ? "追蹤你的採購表現" : "Track your procurement performance"}
+        <p style={{ margin: 0, color: isDark ? '#9ca3af' : '#757575', fontSize: '14px', transition: 'color 0.3s ease' }}>
+          深入分析業務數據
         </p>
       </div>
 
-      {/* Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-        <div className="stat-card">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{isZh ? "總支出" : "Total Spend"}</p>
-              <p style={{ fontSize: '28px', fontWeight: '600', margin: '8px 0 0 0' }}>${totalSpend.toLocaleString()}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-                <TrendingUp size={16} color="#10b981" />
-                <span style={{ fontSize: '13px', color: '#10b981' }}>+{orders.length} {isZh ? "筆訂單" : "orders"}</span>
-              </div>
+      {/* KPI Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: '20px',
+        marginBottom: '24px'
+      }}>
+        <div style={{ padding: '24px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#2d9e6d20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TrendingUp size={20} color="#2d9e6d" />
             </div>
-            <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)' }}>
-              <DollarSign size={24} color="#10b981" />
-            </div>
+            <span style={{ fontSize: '14px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>庫存周轉率</span>
           </div>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>{inventoryMetrics.turnoverRate}x</p>
+          <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#16a34a' }}>↑ 比上月 +1.2</p>
         </div>
-
-        <div className="stat-card">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{isZh ? "總訂單" : "Total Orders"}</p>
-              <p style={{ fontSize: '28px', fontWeight: '600', margin: '8px 0 0 0' }}>{totalOrders}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-                <ShoppingCart size={16} color="#3b82f6" />
-                <span style={{ fontSize: '13px', color: '#3b82f6' }}>{isZh ? "已完成" : "completed"}</span>
-              </div>
+        <div style={{ padding: '24px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#5ac8fa20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Package size={20} color="#5ac8fa" />
             </div>
-            <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.15)' }}>
-              <ShoppingCart size={24} color="#3b82f6" />
-            </div>
+            <span style={{ fontSize: '14px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>庫存天數</span>
           </div>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>{inventoryMetrics.daysOnHand} 天</p>
+          <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#16a34a' }}>↓ 比上月 -3 天</p>
         </div>
-
-        <div className="stat-card">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{isZh ? "平均訂單價值" : "Avg Order Value"}</p>
-              <p style={{ fontSize: '28px', fontWeight: '600', margin: '8px 0 0 0' }}>${avgOrderValue}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-                <TrendingDown size={16} color="#ef4444" />
-              </div>
+        <div style={{ padding: '24px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#f59e0b20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AlertTriangle size={20} color="#f59e0b" />
             </div>
-            <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.15)' }}>
-              <DollarSign size={24} color="#ef4444" />
-            </div>
+            <span style={{ fontSize: '14px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>缺貨率</span>
           </div>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>{inventoryMetrics.stockoutRate}%</p>
+          <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#16a34a' }}>↓ 比上月 -0.5%</p>
         </div>
-
-        <div className="stat-card">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>{isZh ? "活躍供應商" : "Active Suppliers"}</p>
-              <p style={{ fontSize: '28px', fontWeight: '600', margin: '8px 0 0 0' }}>{activeSuppliers}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-                <Users size={16} color="#8b5cf6" />
-                <span style={{ fontSize: '13px', color: '#8b5cf6' }}>/ {suppliers.length}</span>
-              </div>
+        <div style={{ padding: '24px', background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', transition: 'all 0.3s ease' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#ef444420', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TrendingDown size={20} color="#ef4444" />
             </div>
-            <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(139, 92, 246, 0.15)' }}>
-              <Users size={24} color="#8b5cf6" />
-            </div>
+            <span style={{ fontSize: '14px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>浪費率</span>
           </div>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>{inventoryMetrics.wasteRate}%</p>
+          <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#16a34a' }}>↓ 比上月 -0.3%</p>
         </div>
       </div>
 
-      {/* Charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
-        {/* Monthly Spend */}
-        <div className="card" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
-            {isZh ? "月度支出趨勢" : "Monthly Spend Trend"}
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={monthlySpend}>
-              <XAxis 
-                dataKey="month" 
-                axisLine={false} 
-                tickLine={false}
-                tick={{ fill: 'var(--muted)', fontSize: 12 }}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false}
-                tick={{ fill: 'var(--muted)', fontSize: 12 }}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: 'var(--card-bg)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px var(--shadow)',
-                }}
-                formatter={(value: number | undefined) => [`$${(value || 0).toLocaleString()}`, 'Spend']}
-              />
-              <Bar dataKey="spend" fill="var(--primary)" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Category Breakdown */}
-        <div className="card" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
-            {isZh ? "支出分類" : "Spend by Category"}
-          </h3>
-          {categoryData.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: 'var(--card-bg)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 12px var(--shadow)',
-                    }}
-                    formatter={(value: number | undefined) => [`$${(value || 0).toLocaleString()}`, 'Spend']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
-                {categoryData.map((item) => (
-                  <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: item.color }} />
-                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{item.name}</span>
+      {/* Charts Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+        gap: '20px',
+        marginBottom: '24px'
+      }}>
+        {/* 成本趨勢 */}
+        <div style={{ background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', padding: '24px', transition: 'all 0.3s ease' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 20px 0', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>成本趨勢分析</h3>
+          <div style={{ height: '300px', display: 'flex', alignItems: 'flex-end', gap: '16px', paddingBottom: '20px' }}>
+            {costTrendData.map((item, index) => {
+              const maxBudget = Math.max(...costTrendData.map(d => d.budget));
+              const costHeight = (item.cost / maxBudget) * 100;
+              const budgetHeight = (item.budget / maxBudget) * 100;
+              return (
+                <div key={index} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center', gap: '4px', alignItems: 'flex-end' }}>
+                    <div style={{
+                      width: '20px',
+                      height: `${costHeight}%`,
+                      background: 'linear-gradient(180deg, #2d9e6d 0%, #5ac8fa 100%)',
+                      borderRadius: '4px 4px 0 0'
+                    }} />
+                    <div style={{
+                      width: '20px',
+                      height: `${budgetHeight}%`,
+                      background: 'linear-gradient(180deg, #f59e0b 0%, #ef4444 100%)',
+                      opacity: 0.5,
+                      borderRadius: '4px 4px 0 0'
+                    }} />
                   </div>
-                ))}
+                  <span style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#757575' }}>{item.month}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '16px', height: '16px', background: 'linear-gradient(180deg, #2d9e6d 0%, #5ac8fa 100%)', borderRadius: '4px' }} />
+              <span style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>實際成本</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '16px', height: '16px', background: 'linear-gradient(180deg, #f59e0b 0%, #ef4444 100%)', opacity: 0.5, borderRadius: '4px' }} />
+              <span style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>預算</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 供應商比較雷達圖 */}
+        <div style={{ background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', padding: '24px', transition: 'all 0.3s ease' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 20px 0', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>供應商綜合比較</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {supplierComparison.map((supplier, index) => (
+              <div key={index}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>{supplier.name}</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>價格</span>
+                      <span style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>{supplier.price}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: '6px', background: isDark ? '#374151' : '#f5f5f5', borderRadius: '3px', overflow: 'hidden', transition: 'background 0.3s ease' }}>
+                      <div style={{ width: `${supplier.price}%`, height: '100%', background: '#2d9e6d', borderRadius: '3px' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>品質</span>
+                      <span style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>{supplier.quality}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: '6px', background: isDark ? '#374151' : '#f5f5f5', borderRadius: '3px', overflow: 'hidden', transition: 'background 0.3s ease' }}>
+                      <div style={{ width: `${supplier.quality}%`, height: '100%', background: '#5ac8fa', borderRadius: '3px' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>交貨</span>
+                      <span style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>{supplier.delivery}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: '6px', background: isDark ? '#374151' : '#f5f5f5', borderRadius: '3px', overflow: 'hidden', transition: 'background 0.3s ease' }}>
+                      <div style={{ width: `${supplier.delivery}%`, height: '100%', background: '#f59e0b', borderRadius: '3px' }} />
+                    </div>
+                  </div>
+                </div>
               </div>
-            </>
-          ) : (
-            <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '80px 0' }}>
-              {isZh ? "添加供應商分類以查看" : "Add supplier categories to view"}
-            </p>
-          )}
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Supplier Performance Table */}
-      {supplierPerformance.length > 0 && (
-        <div className="card" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 20px 0' }}>
-            {isZh ? "供應商表現" : "Supplier Performance"}
-          </h3>
-          <table>
-            <thead>
-              <tr>
-                <th>{isZh ? "供應商" : "Supplier"}</th>
-                <th>{isZh ? "訂單數" : "Orders"}</th>
-                <th>{isZh ? "評分" : "Rating"}</th>
-                <th>{isZh ? "支出" : "Spend"}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {supplierPerformance.map((supplier) => (
-                <tr key={supplier.name}>
-                  <td style={{ fontWeight: '500' }}>{supplier.name}</td>
-                  <td>{supplier.orders}</td>
-                  <td>
-                    <span style={{ 
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '4px 10px',
-                      borderRadius: '20px',
-                      background: 'rgba(16, 185, 129, 0.15)',
-                      color: '#059669',
-                      fontSize: '13px',
-                      fontWeight: '500',
-                    }}>
-                      {supplier.rating} ★
-                    </span>
-                  </td>
-                  <td style={{ fontWeight: '500' }}>${supplier.spend.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Alerts */}
+      <div style={{ background: isDark ? '#1f2937' : '#ffffff', borderRadius: '16px', boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)', padding: '24px', transition: 'all 0.3s ease' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 20px 0', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>智能提示</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {alerts.map((alert, index) => (
+            <div
+              key={index}
+              style={{
+                padding: '16px',
+                background: alert.type === 'warning' ? (isDark ? '#78350f' : '#fffbeb') : alert.type === 'success' ? (isDark ? '#14532d' : '#f0fdf4') : (isDark ? '#1e3a5f' : '#eff6ff'),
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              {alert.type === 'warning' ? (
+                <AlertTriangle size={20} color={isDark ? '#fbbf24' : '#d97706'} />
+              ) : alert.type === 'success' ? (
+                <TrendingUp size={20} color={isDark ? '#4ade80' : '#16a34a'} />
+              ) : (
+                <DollarSign size={20} color={isDark ? '#60a5fa' : '#2563eb'} />
+              )}
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontSize: '14px', color: isDark ? '#f9fafb' : '#1a1a1a', transition: 'color 0.3s ease' }}>{alert.message}</p>
+                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: isDark ? '#9ca3af' : '#757575', transition: 'color 0.3s ease' }}>{alert.time}</p>
+              </div>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

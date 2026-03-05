@@ -18,13 +18,15 @@ function LoginForm() {
     if (email === "eldon@chta.one" && password === "0000") {
       const user = {
         id: "2",
-        name: "",
+        name: "Eldon",
         email: email,
-        restaurantName: "",
-        restaurantAddress: "",
+        restaurantName: "My Restaurant",
+        restaurantAddress: "Hong Kong",
       };
       localStorage.setItem('open-purchase-user', JSON.stringify(user));
-      window.location.href = "/";
+      // Set session cookie for middleware
+      document.cookie = 'session=true; path=/; max-age=86400';
+      window.location.href = "/dashboard";
       return;
     }
 
@@ -38,8 +40,10 @@ function LoginForm() {
         restaurantAddress: "123 Food Street, Hong Kong",
       };
       localStorage.setItem('open-purchase-user', JSON.stringify(user));
+      // Set session cookie for middleware
+      document.cookie = 'session=true; path=/; max-age=86400';
       // Use window.location for full page reload to ensure auth state is fresh
-      window.location.href = "/";
+      window.location.href = "/dashboard";
       return;
     }
 
@@ -67,8 +71,11 @@ function LoginForm() {
       };
       localStorage.setItem('open-purchase-user', JSON.stringify(user));
 
+      // Set session cookie for middleware
+      document.cookie = 'session=true; path=/; max-age=86400';
+
       // Use window.location for full page reload
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (err: any) {
       setError(err.message || "登入失敗");
       setLoading(false);
