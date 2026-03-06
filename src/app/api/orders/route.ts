@@ -1,97 +1,177 @@
 import { NextResponse } from "next/server";
 import { createRateLimitedHandler } from "@/lib/rate-limit";
-import { z } from "zod";
+import { supabase } from "@/lib/supabase";
 
-// Zod validation schema for order data
-const orderSchema = z.object({
-  supplierId: z.string().min(1, "供應商 ID 為必填項"),
-  items: z.array(z.object({
-    productId: z.string().min(1, "商品 ID 為必填項"),
-    quantity: z.number().int().positive("數量必須為正整數"),
-    unitPrice: z.number().nonnegative("單價必須為非負數"),
-  })).min(1, "至少需要一個商品"),
-  notes: z.string().optional(),
-});
+// GET - 讀取所有訂單
+async function handleGET() {
+  try {
+    const { data: orders, error } = await supabase
+      .from('Order')
+      .select(`
+        *,
+        Supplier (
+          id,
+          name,
+          contact,
+          phone,
+          email
+        )
+      `)
+      .order('createdat', { ascending: false });
 
-// Validate order input
-function validateOrder(data: unknown) {
-  const result = orderSchema.safeParse(data);
-  if (!result.success) {
-    // Zod 4: error.message contains JSON string of errors
-    const errorData = JSON.parse(result.error.message);
-    const errors = Array.isArray(errorData) ? errorData : [];
-    return {
-      valid: false,
-      errors: errors.map((err: any) => ({
-        field: err.path?.join(".") || "",
-        message: err.message,
-      })),
-    };
+    if (error) {
+      console.error('讀取訂單失敗:', error);
+      return NextResponse.json({
+        success: false,
+        error: error.message,
+      }, { status: 500 });
+    }
+
+    // 轉換字段名為前端期望的格式
+    const formattedOrders = (orders || []).map(order => ({
+      id: order.id,
+      orderNumber: order.ordernumber,
+      supplierId: order.supplierid,
+      supplierName: order.Supplier?.name || '未知供應商',
+      status: order.status,
+      totalAmount: order.totalamount,
+      notes: order.notes,
+      createdAt: order.createdat,
+      updatedAt: order.updatedat,
+      whatsappStatus: order.whatsappstatus,
+    }));
+
+    return NextResponse.json({
+      success: true,
+      data: formattedOrders,
+      total: formattedOrders.length,
+    });
+  } catch (error) {
+    console.error('讀取訂單失敗:', error);
+    return NextResponse.json({
+      success: false,
+      error: '無法讀取訂單',
+    }, { status: 500 });
   }
-  return { valid: true, data: result.data };
 }
 
-// Mock data for demo
-const orders = [
-  { id: "1", orderNumber: "ORD-001", supplierId: "1", status: "DELIVERED", totalAmount: 450, createdAt: new Date().toISOString() },
-  { id: "2", orderNumber: "ORD-002", supplierId: "2", status: "SHIPPED", totalAmount: 890, createdAt: new Date().toISOString() },
-  { id: "3", orderNumber: "ORD-003", supplierId: "3", status: "PENDING", totalAmount: 320, createdAt: new Date().toISOString() },
-  { id: "4", orderNumber: "ORD-004", supplierId: "1", status: "CONFIRMED", totalAmount: 560, createdAt: new Date().toISOString() },
-  { id: "5", orderNumber: "ORD-005", supplierId: "4", status: "DELIVERED", totalAmount: 180, createdAt: new Date().toISOString() },
-];
-
-async function handleGET(request: Request) {
-  return NextResponse.json({
-    success: true,
-    data: orders,
-    total: orders.length,
-  });
-}
-
+// POST - 創建新訂單
 async function handlePOST(request: Request) {
   try {
     const body = await request.json();
     
-    // Validate input
-    const validation = validateOrder(body);
-    if (!validation.valid) {
-      return NextResponse.json(
-        { success: false, error: "驗證失敗", details: validation.errors },
-        { status: 400 }
-      );
+    const { supplierId, supplierName, status, totalAmount, items, notes } = body;
+    
+    if (!supplierId) {
+      return NextResponse.json({
+        success: false,
+        error: '供應商 ID 為必填',
+      }, { status: 400 });
     }
 
-    // TypeScript doesn't know validation.data exists here, so we need to cast it
-    const validatedData = validation.data!;
-    const totalAmount = validatedData.items.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice, 
-      0
-    );
-    
+    // 生成訂單編號
+    const orderNumber = `PO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Date.now().toString().slice(-6)}`;
+
+    // 創建訂單 - 使用 Order 表的字段名格式
     const newOrder = {
-      id: String(orders.length + 1),
-      orderNumber: `ORD-${String(orders.length + 1).padStart(3, "0")}`,
-      supplierId: validatedData.supplierId,
-      items: validatedData.items,
-      totalAmount,
-      notes: validatedData.notes || "",
-      status: "PENDING",
-      createdAt: new Date().toISOString(),
+      ordernumber: orderNumber,
+      supplierid: supplierId,
+      status: status || 'PENDING',
+      totalamount: totalAmount || 0,
+      notes: notes || '',
+      whatsappstatus: 'not_sent',
     };
-    orders.push(newOrder);
-    
+
+    const { data: order, error: orderError } = await supabase
+      .from('Order')
+      .insert(newOrder)
+      .select()
+      .single();
+
+    if (orderError) {
+      console.error('創建訂單失敗:', orderError);
+      return NextResponse.json({
+        success: false,
+        error: orderError.message,
+      }, { status: 500 });
+    }
+
+    // 創建訂單項目
+    if (items && items.length > 0) {
+      const orderItems = items.map((item: any) => ({
+        orderid: order.id,
+        productid: item.productId,
+        productname: item.productName || '',
+        quantity: item.quantity,
+        unitprice: item.unitPrice,
+        totalprice: item.totalPrice || (item.quantity * item.unitPrice),
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('OrderItem')
+        .insert(orderItems);
+
+      if (itemsError) {
+        console.error('創建訂單項目失敗:', itemsError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      data: newOrder,
-      message: "Order created successfully",
+      data: {
+        id: order.id,
+        orderNumber: order.ordernumber,
+        status: order.status,
+      },
     });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: "Failed to create order" },
-      { status: 400 }
-    );
+    console.error('創建訂單失敗:', error);
+    return NextResponse.json({
+      success: false,
+      error: '無法創建訂單',
+    }, { status: 500 });
   }
 }
 
+// DELETE - 刪除訂單
+async function handleDELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        error: '訂單 ID 為必填',
+      }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from('Order')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('刪除訂單失敗:', error);
+      return NextResponse.json({
+        success: false,
+        error: error.message,
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+    });
+  } catch (error) {
+    console.error('刪除訂單失敗:', error);
+    return NextResponse.json({
+      success: false,
+      error: '無法刪除訂單',
+    }, { status: 500 });
+  }
+}
+
+// 使用 rate limit handler
 export const GET = createRateLimitedHandler(handleGET);
 export const POST = createRateLimitedHandler(handlePOST);
+export const DELETE = createRateLimitedHandler(handleDELETE);

@@ -1,8 +1,18 @@
 "use client";
 
-import { useTheme } from '@/lib/ThemeContext';
+import { useState, useEffect } from 'react';
 import { Package, ShoppingCart, BarChart3, FileText, Plus, Store, TrendingUp, Book, Users, Smartphone, Brain } from 'lucide-react';
 import Link from 'next/link';
+
+// 直接讀取 localStorage，避免依賴 ThemeContext
+function useIsDark() {
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    setIsDark(savedTheme === 'dark');
+  }, []);
+  return isDark;
+}
 
 const stats = [
   { label: '總訂單', value: '7', color: '#5ac8fa', icon: ShoppingCart },
@@ -60,7 +70,7 @@ const features = [
 ];
 
 export default function DashboardPage() {
-  const { isDark } = useTheme();
+  const isDark = useIsDark();
 
   return (
     <div style={{ 
